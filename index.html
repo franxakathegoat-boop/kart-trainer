@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kart Neck Trainer – Sintesi</title>
+<style>
+  :root{
+    --bg:#0e1013; --panel:#171a1f; --panel2:#1e222a; --line:#2a2f38;
+    --text:#e9ecf1; --muted:#8b93a1; --left:#4ea1ff; --right:#ff8a3d;
+    --ok:#3ddc84; --warn:#ffcc33; --stop:#ff3b3b; --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+  body{padding:calc(12px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left))}
+  .wrap{max-width:1100px;margin:0 auto;display:grid;gap:12px}
+  header{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  header h1{font-size:18px;margin:0;letter-spacing:.3px;flex:1;min-width:160px}
+  header h1 small{display:block;color:var(--muted);font-weight:400;font-size:12px}
+  .pill{font-size:12px;padding:6px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);white-space:nowrap}
+  .pill.ok{color:var(--ok);border-color:#235e3d}
+  .pill.warn{color:var(--warn);border-color:#6b5716}
+  .stop{background:var(--stop);color:#fff;border:0;border-radius:var(--radius);font-weight:800;font-size:18px;
+    padding:14px 22px;letter-spacing:1px;box-shadow:0 0 0 3px #ff3b3b33}
+  .stop:active{transform:scale(.97)}
+  .grid{display:grid;gap:12px;grid-template-columns:1fr}
+  @media(min-width:860px){.grid{grid-template-columns:1.45fr 1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+  .card h2{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:0 0 10px}
+  .gauges{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .gauge{background:var(--panel2);border-radius:12px;padding:12px;position:relative;overflow:hidden}
+  .gauge .lbl{font-size:12px;color:var(--muted)}
+  .gauge .val{font-size:40px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+  .gauge .val small{font-size:16px;color:var(--muted);font-weight:600}
+  .gauge .tgt{font-size:12px;color:var(--muted)}
+  .gauge .bar{position:absolute;left:0;bottom:0;height:5px;transition:width .1s}
+  .gauge.l .val{color:var(--left)} .gauge.l .bar{background:var(--left)}
+  .gauge.r .val{color:var(--right)} .gauge.r .bar{background:var(--right)}
+  canvas{width:100%;height:190px;display:block;background:var(--panel2);border-radius:12px;margin-top:10px}
+  .segbar{display:flex;height:26px;border-radius:8px;overflow:hidden;margin-top:10px;position:relative;background:var(--panel2)}
+  .segbar div{height:100%;font-size:10px;display:flex;align-items:center;justify-content:center;color:#0008;font-weight:700;overflow:hidden;white-space:nowrap}
+  .segbar .cursor{position:absolute;top:-3px;bottom:-3px;width:3px;background:#fff;border-radius:2px;box-shadow:0 0 6px #fff}
+  .now{display:flex;justify-content:space-between;gap:8px;margin-top:8px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+  .now b{color:var(--text)}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .tabs button{flex:1;min-width:90px;background:var(--panel2);color:var(--muted);border:1px solid var(--line);
+    border-radius:10px;padding:10px 8px;font-size:14px;font-weight:600}
+  .tabs button.on{color:var(--text);border-color:var(--left);background:#1b2a3d}
+  label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+  .row{display:flex;gap:10px;align-items:center}
+  .row > *{flex:1}
+  input[type=range]{width:100%;accent-color:var(--left)}
+  input[type=number],select,textarea,input[type=text]{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);
+    border-radius:10px;padding:10px;font-size:15px;font-family:inherit}
+  textarea{font-family:ui-monospace,Menlo,monospace;font-size:13px;min-height:150px;resize:vertical}
+  .big{width:100%;border:0;border-radius:12px;padding:14px;font-size:17px;font-weight:800;margin-top:14px}
+  .go{background:var(--ok);color:#06210f}
+  .go:disabled{opacity:.4}
+  .ghost{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;font-weight:600}
+  .note{font-size:12px;color:var(--muted);line-height:1.45;margin-top:8px}
+  .warnbox{background:#2a2310;border:1px solid #6b5716;color:#ffe08a;border-radius:10px;padding:10px;font-size:13px;line-height:1.45}
+  .hidden{display:none !important}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .stats div{background:var(--panel2);border-radius:10px;padding:8px;text-align:center}
+  .stats b{display:block;font-size:20px;font-variant-numeric:tabular-nums}
+  .stats span{font-size:11px;color:var(--muted)}
+  .log{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;background:#0a0c0f;border-radius:10px;padding:10px;
+    height:180px;overflow:auto;white-space:pre-wrap;color:#b9c2cf;margin-top:8px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  td,th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left}
+  th{color:var(--muted);font-weight:600}
+  #countdown{position:fixed;inset:0;background:#000c;display:flex;align-items:center;justify-content:center;
+    font-size:120px;font-weight:900;z-index:20}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+  .chips span{font-size:11px;padding:3px 8px;border-radius:6px;color:#000;font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Kart Neck Trainer<small>Per Sintesi by Akuis · prototipo</small></h1>
+    <span id="connPill" class="pill warn">● Simulatore</span>
+    <button class="stop" id="btnStop">STOP</button>
+  </header>
+
+  <div class="grid">
+    <!-- LIVE -->
+    <section class="card">
+      <h2>Live</h2>
+      <div class="gauges">
+        <div class="gauge l"><div class="lbl">Colonna SINISTRA</div>
+          <div class="val"><span id="gL">0.0</span> <small>kg</small></div>
+          <div class="tgt">obiettivo <span id="tL">0.0</span> kg</div><div class="bar" id="bL"></div></div>
+        <div class="gauge r"><div class="lbl">Colonna DESTRA</div>
+          <div class="val"><span id="gR">0.0</span> <small>kg</small></div>
+          <div class="tgt">obiettivo <span id="tR">0.0</span> kg</div><div class="bar" id="bR"></div></div>
+      </div>
+      <canvas id="chart"></canvas>
+      <div id="segWrap" class="hidden">
+        <div class="segbar" id="segbar"></div>
+        <div class="now"><span>Tratto: <b id="segName">–</b></span><span>Giro <b id="lapNow">0</b>/<b id="lapTot">0</b></span><span>G laterali: <b id="gNow">0.0</b></span></div>
+      </div>
+      <div class="now"><span>Stato: <b id="stateTxt">fermo</b></span><span>Tempo: <b id="timeTxt">0:00</b></span></div>
+
+      <h2 style="margin-top:16px">Sessione</h2>
+      <div class="stats">
+        <div><b id="sPeak">0</b><span>picco kg</span></div>
+        <div><b id="sAvg">0</b><span>media kg</span></div>
+        <div><b id="sTut">0</b><span>s sotto carico</span></div>
+        <div><b id="sImp">0</b><span>impulso kg·s</span></div>
+      </div>
+    </section>
+
+    <!-- CONTROLLI -->
+    <section class="card">
+      <div class="tabs" id="tabs">
+        <button data-tab="circuito" class="on">Circuito</button>
+        <button data-tab="costante">Costante</button>
+        <button data-tab="iso">Isometrico</button>
+        <button data-tab="setup">Sicurezza</button>
+        <button data-tab="ble">Bluetooth</button>
+        <button data-tab="storico">Storico</button>
+      </div>
+
+      <!-- CIRCUITO -->
+      <div data-panel="circuito">
+        <label>Profilo</label>
+        <select id="preset"></select>
+        <label>Tratti (tipo · secondi · G)</label>
+        <textarea id="segText" spellcheck="false"></textarea>
+        <div class="chips">
+          <span style="background:var(--left)">sx = curva sinistra</span>
+          <span style="background:var(--right)">dx = curva destra</span>
+          <span style="background:#c9ced6">dritto</span>
+          <span style="background:#ff6b6b">frenata</span>
+          <span style="background:var(--warn)">cordolo</span>
+        </div>
+        <div class="row">
+          <div><label>Giri</label><input type="number" id="laps" min="1" max="50" value="5"></div>
+          <div><label>kg per 1 G</label><input type="number" id="kgPerG" min="0.5" max="10" step="0.5" value="2.5"></div>
+        </div>
+        <label><input type="checkbox" id="invert"> Inverti lati (curva a destra = tira la colonna destra)</label>
+        <p class="note">Di default una curva a <b>destra</b> fa tirare la colonna <b>sinistra</b>: come in pista, la forza centrifuga spinge la testa verso l'esterno e il collo deve resistere. La frenata tira entrambe le colonne. Il cordolo aggiunge vibrazione.</p>
+        <button class="big go" id="goCircuit">▶ Avvia circuito</button>
+      </div>
+
+      <!-- COSTANTE -->
+      <div data-panel="costante" class="hidden">
+        <label>Sinistra: <b id="cLv">5.0</b> kg</label>
+        <input type="range" id="cL" min="0" max="30" step="0.5" value="5">
+        <label>Destra: <b id="cRv">5.0</b> kg</label>
+        <input type="range" id="cR" min="0" max="30" step="0.5" value="5">
+        <label><input type="checkbox" id="cLink" checked> Stesso carico su entrambi i lati</label>
+        <label>Durata (secondi, 0 = finché premi STOP)</label>
+        <input type="number" id="cDur" min="0" max="3600" value="60">
+        <p class="note">Forza costante: il motore mantiene il carico qualunque sia la posizione del cavo. Si può cambiare mentre è in corso.</p>
+        <button class="big go" id="goConst">▶ Avvia forza costante</button>
+      </div>
+
+      <!-- ISOMETRICO -->
+      <div data-panel="iso" class="hidden">
+        <div class="row">
+          <div><label>Carico kg</label><input type="number" id="iKg" min="0.5" max="30" step="0.5" value="6"></div>
+          <div><label>Ripetizioni</label><input type="number" id="iReps" min="1" max="50" value="8"></div>
+        </div>
+        <div class="row">
+          <div><label>Lavoro s</label><input type="number" id="iWork" min="1" max="120" value="10"></div>
+          <div><label>Recupero s</label><input type="number" id="iRest" min="0" max="300" value="15"></div>
+        </div>
+        <label>Lato</label>
+        <select id="iSide">
+          <option value="alt">Alternato sinistra / destra</option>
+          <option value="both">Entrambi</option>
+          <option value="L">Solo sinistra</option>
+          <option value="R">Solo destra</option>
+        </select>
+        <label>Salita del carico (s)</label>
+        <input type="number" id="iRamp" min="0" max="10" step="0.5" value="1.5">
+        <p class="note">Tieni la testa ferma mentre la forza sale, resta e scende. È lo sforzo più simile alla guida reale.</p>
+        <button class="big go" id="goIso">▶ Avvia isometrico</button>
+      </div>
+
+      <!-- SICUREZZA -->
+      <div data-panel="setup" class="hidden">
+        <div class="warnbox">Questi limiti valgono per <b>tutte</b> le modalità e non si possono superare. Inizia basso: per il collo pochi kg sono già tanti.</div>
+        <label>Forza massima per lato: <b id="maxKgV">12</b> kg</label>
+        <input type="range" id="maxKg" min="1" max="40" step="0.5" value="12">
+        <label>Velocità massima di variazione: <b id="rampV">8</b> kg/s</label>
+        <input type="range" id="ramp" min="1" max="40" step="1" value="8">
+        <label>Conto alla rovescia prima di partire (s)</label>
+        <input type="number" id="cd" min="0" max="10" value="3">
+        <label><input type="checkbox" id="autoStopHidden" checked> Ferma tutto se l'app va in secondo piano</label>
+        <p class="note">Il pulsante rosso fisico della macchina resta sempre l'arresto principale. Lo STOP dell'app porta i comandi a zero subito, senza rampa.</p>
+      </div>
+
+      <!-- BLUETOOTH -->
+      <div data-panel="ble" class="hidden">
+        <div id="bleUnsupported" class="warnbox hidden"></div>
+        <div class="warnbox" style="margin-bottom:8px">Prima di collegarti: nell'app Sintesi premi <b>DISCONNETTI</b> e chiudila. La macchina accetta un solo collegamento alla volta. Prove a carico basso, pulsante rosso a portata di mano.</div>
+        <div class="row">
+          <button class="ghost" id="bleConnect">Collega SINTESI</button>
+          <button class="ghost" id="bleDisconnect">Scollega</button>
+        </div>
+        <div class="now"><span>Stato macchina: <b id="mState">–</b></span><span>Allarmi: <b id="mAlarm">–</b></span></div>
+        <label><input type="checkbox" id="bleLive"> Aggiorna il carico <b>durante</b> l'esercizio (sperimentale – serve per Circuito e Isometrico)</label>
+        <label><input type="checkbox" id="bleSplit"> Carichi diversi sinistra/destra (sperimentale)</label>
+        <p class="note">Senza queste due opzioni l'app fa solo quello che abbiamo già visto fare all'app Sintesi: imposta un carico uguale sui due lati, avvia, ferma. Le opzioni sperimentali vanno provate prima a 3–5 kg.</p>
+        <details style="margin-top:10px"><summary class="note" style="cursor:pointer">Avanzato: scrittura grezza</summary>
+          <select id="bleChar" style="margin-top:6px"></select>
+          <div class="row" style="margin-top:6px">
+            <input type="text" id="bleHex" placeholder="es. 04 00 00 00">
+            <button class="ghost" id="bleSend" style="flex:0 0 auto">Invia</button>
+          </div>
+        </details>
+        <div class="row"><h2 style="margin:12px 0 0">Registro</h2><button class="ghost" id="logCopy" style="flex:0 0 auto;margin-top:8px">Copia registro</button></div>
+        <div class="log" id="log"></div>
+      </div>
+
+      <!-- STORICO -->
+      <div data-panel="storico" class="hidden">
+        <table><thead><tr><th>Data</th><th>Modalità</th><th>Durata</th><th>Picco</th><th>Impulso</th></tr></thead>
+          <tbody id="histBody"></tbody></table>
+        <p class="note">Lo storico resta solo su questo dispositivo e in questo browser.</p>
+        <button class="ghost" id="histClear">Cancella storico</button>
+      </div>
+    </section>
+  </div>
+</div>
+<div id="countdown" class="hidden"></div>
+
+<script>
+"use strict";
+/* =========================================================
+   CONFIG & PRESET
+   ========================================================= */
+const PRESETS = {
+  "Circuito tecnico (demo)": `dritto 4 0
+frenata 1 1.2
+dx 3 1.8
+dritto 2 0
+sx 2.5 2.0
+cordolo 0.8 1.0
+dx 2 1.6
+dritto 3 0
+frenata 1 1.4
+sx 3.5 2.2
+dritto 2 0
+dx 2 1.5
+sx 2 1.5
+dritto 5 0`,
+  "Circuito veloce (demo)": `dritto 7 0
+frenata 1.2 1.6
+sx 4 2.4
+dritto 4 0
+dx 5 2.6
+cordolo 1 1.2
+dritto 6 0
+frenata 1 1.5
+dx 3 2.0
+dritto 5 0`,
+  "Riscaldamento leggero": `dritto 3 0
+dx 3 0.8
+dritto 2 0
+sx 3 0.8
+dritto 2 0
+dx 3 1.0
+dritto 2 0
+sx 3 1.0`,
+  "Solo curve a destra": `dritto 2 0
+dx 4 1.8
+dritto 3 0
+dx 4 1.8`,
+  "Solo curve a sinistra": `dritto 2 0
+sx 4 1.8
+dritto 3 0
+sx 4 1.8`
+};
+const SEG_COLORS = {sx:"#4ea1ff", dx:"#ff8a3d", dritto:"#c9ced6", frenata:"#ff6b6b", cordolo:"#ffcc33"};
+const TICK_MS = 50;
+
+/* =========================================================
+   STORAGE (safe)
+   ========================================================= */
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v);}catch(e){return d;} },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+};
+
+/* =========================================================
+   DRIVER: Simulatore
+   ========================================================= */
+class SimDriver {
+  constructor(){ this.name="Simulatore"; this.cmd={L:0,R:0}; this.act={L:0,R:0}; }
+  setForce(L,R){ this.cmd.L=L; this.cmd.R=R; }
+  stop(){ this.cmd.L=0; this.cmd.R=0; }
+  tick(dt){ // motore con ritardo del primo ordine + piccolo rumore
+    const a = 1-Math.exp(-dt/0.15);
+    for(const s of ["L","R"]){
+      this.act[s] += (this.cmd[s]-this.act[s])*a;
+      if(this.cmd[s]>0.05) this.act[s] += (Math.random()-0.5)*0.08;
+      if(this.act[s]<0) this.act[s]=0;
+    }
+  }
+  read(){ return this.act; }
+}
+
+/* =========================================================
+   DRIVER: Bluetooth (esploratore + segnaposto protocollo)
+   ========================================================= */
+/* ---------------------------------------------------------
+   PROTOCOLLO SINTESI (ricavato dal registro Bluetooth del 14/11/2026)
+   Servizio 6e400001-b5a3-f393-e0a9-e50e24dcca9e, caratteristiche a 16 bit:
+   0x0007  scrittura  JSON di avvio {"cmd":0,"comVersion":3,"outputPeriod":80}
+   0xFF03  scrittura  configurazione carico: 168 byte, interi a 32 bit little-endian,
+                      carico in grammi agli indici 1, 2, 11, 19 (5 kg -> 5000)
+   0xFF07  scrittura  03 00 00 00 = AVVIA   04 00 00 00 = FERMA
+   0xFF0C  notifica   JSON stato {"OUT_APP_SEQ":3 fermo / 4 in corso, "OUT_APP_ALARM":...}
+   0xFF0D  notifica   telemetria 44 byte: indici 2 e 3 = carico attuale in grammi
+   --------------------------------------------------------- */
+const NUS = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+const U16 = h => `0000${h}-0000-1000-8000-00805f9b34fb`;
+const CH = { init:U16("0007"), cfg:U16("ff03"), run:U16("ff07"), status:U16("ff0c"), tele:U16("ff0d"), resp:U16("0002") };
+const CFG_TEMPLATE = "00000000881300008813000000000000000000000000000000000000010000000000000000000000000000008813000000000000000000000000000000000000000000000000000000000000881300000000000000000000000000000000000000000000000000000000000000000000a861000000000000000000000000000000000000000000000000000000000000000000000100000002000000030000000400000000000000";
+const LOAD_IDX = [1,2,11,19];
+const MIN_G = 3000;      // la macchina sta a 3 kg a riposo
+const LICENSE_MAX_KG = 50; // limite della licenza di questa macchina
+
+class BleDriver {
+  constructor(log){ this.name="Bluetooth"; this.log=log; this.device=null; this.c={}; this.allChars=[];
+    this.cmd={L:0,R:0}; this.meas={L:0,R:0}; this.q=Promise.resolve(); this.lastSent=null; this.lastT=0; this.active=false; this.seq=null; }
+  get connected(){ return !!(this.device && this.device.gatt && this.device.gatt.connected); }
+  enqueue(label,fn){ this.q=this.q.then(fn).catch(e=>this.log(`✖ ${label}: ${e.message}`)); return this.q; }
+  async write(key,bytes,label){
+    const c=this.c[key]; if(!c) throw new Error("caratteristica "+key+" mancante");
+    await c.writeValueWithResponse(bytes);
+    if(label) this.log("▶ "+label);
+  }
+  async connect(){
+    if(!navigator.bluetooth) throw new Error("Web Bluetooth non disponibile su questo browser.");
+    this.device = await navigator.bluetooth.requestDevice({filters:[{namePrefix:"SINTESI"}], optionalServices:[NUS]});
+    this.log(`Dispositivo: ${this.device.name}`);
+    this.device.addEventListener("gattserverdisconnected",()=>{ this.log("⚠ Disconnesso dalla macchina."); this.active=false; onDriverChange(); if(S.running) emergencyStop(); });
+    const server = await this.device.gatt.connect();
+    const svc = await server.getPrimaryService(NUS);
+    this.allChars = await svc.getCharacteristics();
+    for(const [k,u] of Object.entries(CH)){ this.c[k]=this.allChars.find(x=>x.uuid===u); if(!this.c[k]) this.log("⚠ manca "+k+" ("+u+")"); }
+    const sub=async(k,fn)=>{ if(!this.c[k]) return; await this.c[k].startNotifications(); this.c[k].addEventListener("characteristicvaluechanged",e=>fn(e.target.value)); };
+    await sub("tele",dv=>{ if(dv.byteLength>=16){ this.meas.L=dv.getInt32(8,true)/1000; this.meas.R=dv.getInt32(12,true)/1000; } });
+    await sub("status",dv=>this.onStatus(new TextDecoder().decode(dv)));
+    await sub("resp",dv=>this.log("◀ "+new TextDecoder().decode(dv)));
+    await this.write("init",new TextEncoder().encode('{"cmd":0,"comVersion":3,"outputPeriod":80}'),"avvio comunicazione");
+    this.log("✔ Pronto. Carico max consentito: "+Math.min(+$("maxKg").value,LICENSE_MAX_KG)+" kg");
+    return this.allChars;
+  }
+  onStatus(txt){
+    try{ const j=JSON.parse(txt); this.seq=j.OUT_APP_SEQ;
+      $("mState").textContent = j.OUT_APP_SEQ===4?"in corso":j.OUT_APP_SEQ===3?"ferma":String(j.OUT_APP_SEQ);
+      $("mAlarm").textContent = j.OUT_APP_ALARM?("⚠ "+j.OUT_APP_ALARM):"nessuno";
+      if(j.OUT_APP_ALARM && S.running){ this.log("⚠ Allarme macchina "+j.OUT_APP_ALARM+": STOP"); emergencyStop(); }
+    }catch(e){}
+  }
+  grams(kg){ const max=Math.min(+$("maxKg").value,LICENSE_MAX_KG); kg=Math.max(0,Math.min(max,kg)); return Math.max(MIN_G, Math.round(kg*10)*100); }
+  buildCfg(L,R){
+    const hex=CFG_TEMPLATE, b=new Uint8Array(hex.length/2);
+    for(let i=0;i<b.length;i++) b[i]=parseInt(hex.substr(i*2,2),16);
+    const dv=new DataView(b.buffer), gL=this.grams(L), gR=this.grams(R);
+    if($("bleSplit").checked){ dv.setInt32(4,gL,true); dv.setInt32(8,gR,true); dv.setInt32(44,gL,true); dv.setInt32(76,gR,true); }
+    else { const g=Math.max(gL,gR); LOAD_IDX.forEach(i=>dv.setInt32(i*4,g,true)); }
+    return {b,gL,gR};
+  }
+  sendCfg(L,R,why){
+    const {b,gL,gR}=this.buildCfg(L,R), key=gL+"/"+gR;
+    if(key===this.lastSent) return;
+    this.lastSent=key; this.lastT=performance.now();
+    const txt=$("bleSplit").checked?`${(gL/1000).toFixed(1)} / ${(gR/1000).toFixed(1)} kg`:`${(Math.max(gL,gR)/1000).toFixed(1)} kg`;
+    this.enqueue("carico",()=>this.write("cfg",b,`carico ${txt}${why?" ("+why+")":""}`));
+  }
+  begin(L,R){ // imposta carico iniziale e avvia
+    if(!this.connected) return;
+    this.lastSent=null; this.sendCfg(L,R,"iniziale");
+    this.enqueue("avvio",()=>this.write("run",new Uint8Array([3,0,0,0]),"AVVIA"));
+    this.active=true;
+  }
+  setForce(L,R){
+    this.cmd.L=L; this.cmd.R=R;
+    if(!this.active || !$("bleLive").checked) return;
+    if(performance.now()-this.lastT<300) return; // max ~3 aggiornamenti al secondo
+    this.sendCfg(L,R);
+  }
+  stop(){
+    if(!this.connected) return;
+    this.active=false;
+    // FERMA scavalca la coda: va inviato subito
+    this.q=Promise.resolve();
+    (this.c.run? this.c.run.writeValueWithResponse(new Uint8Array([4,0,0,0])) : Promise.reject(new Error("no run")))
+      .then(()=>this.log("■ FERMA")).catch(e=>this.log("✖ FERMA non inviato: "+e.message+" → usa il pulsante rosso!"));
+    this.lastSent=null;
+  }
+  async writeRaw(idx,bytes){ const c=this.allChars[idx]; if(!c) throw new Error("Caratteristica non selezionata");
+    await c.writeValueWithResponse(bytes); this.log(`▶ grezzo ${c.uuid.slice(4,8)}: ${[...bytes].map(x=>x.toString(16).padStart(2,"0")).join(" ")}`); }
+  disconnect(){ if(this.connected){ this.stop(); setTimeout(()=>this.device.gatt.disconnect(),400); } }
+  tick(){}
+  read(){ return this.active? this.meas : {L:this.meas.L,R:this.meas.R}; }
+}
+function toHex(dv){ const a=[]; for(let i=0;i<dv.byteLength;i++) a.push(dv.getUint8(i).toString(16).padStart(2,"0")); return a.join(" "); }
+
+/* =========================================================
+   STATO
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const logLines=[];
+function log(msg){ const t=new Date().toLocaleTimeString(); logLines.push(`[${t}] ${msg}`); if(logLines.length>500) logLines.shift(); $("log").textContent=logLines.join("\n"); $("log").scrollTop=1e9; }
+
+const sim = new SimDriver();
+const ble = new BleDriver(log);
+let driver = sim;
+
+const S = {
+  running:false, mode:null, t0:0, elapsed:0,
+  target:{L:0,R:0}, cmd:{L:0,R:0},
+  program:null, seg:null, lap:0,
+  stats:{peak:0,sum:0,n:0,tut:0,imp:0},
+  samples:[]
+};
+
+/* =========================================================
+   PROGRAMMI (restituiscono il target in base al tempo)
+   ========================================================= */
+function parseSegments(txt){
+  const out=[];
+  txt.split(/\n/).forEach((line,i)=>{
+    const l=line.trim().toLowerCase(); if(!l||l.startsWith("#")) return;
+    const p=l.split(/\s+/);
+    const tipo=p[0], dur=parseFloat(p[1]), g=parseFloat(p[2]||"0");
+    if(!SEG_COLORS[tipo]||!(dur>0)||isNaN(g)) throw new Error(`Riga ${i+1} non valida: "${line.trim()}"`);
+    out.push({tipo,dur,g:Math.max(0,Math.min(g,5))});
+  });
+  if(!out.length) throw new Error("Nessun tratto.");
+  return out;
+}
+function smoothstep(x){ x=Math.max(0,Math.min(1,x)); return x*x*(3-2*x); }
+
+function makeCircuit(segs, laps, kgPerG, invert){
+  const lapLen = segs.reduce((a,s)=>a+s.dur,0);
+  return {
+    duration: lapLen*laps, lapLen, laps, segs,
+    at(t){
+      const lap=Math.min(laps-1,Math.floor(t/lapLen)); let tl=t-lap*lapLen;
+      let i=0; while(i<segs.length-1 && tl>=segs[i].dur){ tl-=segs[i].dur; i++; }
+      const s=segs[i];
+      // dolce in entrata/uscita dal tratto (0.4 s)
+      const edge=Math.min(0.4,s.dur/3);
+      const env=smoothstep(tl/edge)*smoothstep((s.dur-tl)/edge);
+      const kg=s.g*kgPerG*env;
+      let L=0,R=0;
+      if(s.tipo==="dx"){ if(invert) R=kg; else L=kg; }
+      else if(s.tipo==="sx"){ if(invert) L=kg; else R=kg; }
+      else if(s.tipo==="frenata"){ L=kg; R=kg; }
+      else if(s.tipo==="cordolo"){ const v=kg*(0.5+0.5*Math.sin(t*2*Math.PI*8)); L=v; R=v; }
+      return {L,R,info:{seg:i,lap:lap+1,name:s.tipo,g:s.tipo==="dritto"?0:s.g*env,tl}};
+    }
+  };
+}
+function makeConstant(){
+  const dur=parseFloat($("cDur").value)||0;
+  return { duration: dur>0?dur:Infinity, at(){ return {L:parseFloat($("cL").value),R:parseFloat($("cR").value),info:null}; } };
+}
+function makeIso(){
+  const kg=+$("iKg").value, reps=Math.max(1,+$("iReps").value|0), work=Math.max(1,+$("iWork").value), rest=Math.max(0,+$("iRest").value);
+  const side=$("iSide").value, ramp=Math.max(0,+$("iRamp").value);
+  const cycle=work+rest;
+  return {
+    duration: reps*cycle - rest,
+    at(t){
+      const k=Math.floor(t/cycle), tc=t-k*cycle;
+      let f=0, phase="recupero";
+      if(tc<work){ phase="lavoro"; const r=ramp>0?Math.min(smoothstep(tc/ramp),smoothstep((work-tc)/ramp)):1; f=kg*r; }
+      let L=0,R=0;
+      if(side==="both"){L=f;R=f;} else if(side==="L") L=f; else if(side==="R") R=f;
+      else { if(k%2===0) L=f; else R=f; }
+      return {L,R,info:{iso:true,rep:k+1,reps,phase,left:Math.max(0,(phase==="lavoro"?work:cycle)-tc)}};
+    }
+  };
+}
+
+/* =========================================================
+   CICLO PRINCIPALE
+   ========================================================= */
+let last=performance.now();
+setInterval(()=>{
+  const now=performance.now(); const dt=Math.min(0.2,(now-last)/1000); last=now;
+  const maxKg=+$("maxKg").value, rate=+$("ramp").value;
+
+  let tgt={L:0,R:0}, info=null;
+  if(S.running && S.program){
+    S.elapsed=(now-S.t0)/1000;
+    if(S.elapsed>=S.program.duration){ finish("completato"); }
+    else { const r=S.program.at(S.elapsed); tgt={L:r.L,R:r.R}; info=r.info; }
+  }
+  // SICUREZZA 1: limite assoluto
+  tgt.L=Math.max(0,Math.min(maxKg,tgt.L||0)); tgt.R=Math.max(0,Math.min(maxKg,tgt.R||0));
+  S.target=tgt;
+  // SICUREZZA 2: limite di velocità di variazione
+  for(const s of ["L","R"]){
+    const d=tgt[s]-S.cmd[s], m=rate*dt;
+    S.cmd[s] += Math.max(-m,Math.min(m,d));
+  }
+  driver.setForce(S.cmd.L,S.cmd.R);
+  sim.tick(dt);
+  const act=driver.read();
+
+  // statistiche
+  if(S.running){
+    const tot=act.L+act.R, pk=Math.max(act.L,act.R);
+    if(pk>S.stats.peak) S.stats.peak=pk;
+    if(tot>0.3){ S.stats.tut+=dt; S.stats.sum+=pk; S.stats.n++; }
+    S.stats.imp+=tot*dt;
+  }
+  // campioni grafico (ultimi 20 s)
+  S.samples.push({t:now/1000,tl:tgt.L,tr:tgt.R,al:act.L,ar:act.R});
+  while(S.samples.length && S.samples[0].t < now/1000-20) S.samples.shift();
+
+  render(act,info,maxKg);
+},TICK_MS);
+
+/* =========================================================
+   AVVIO / STOP
+   ========================================================= */
+let cdTimer=null;
+function start(mode, program){
+  if(S.running) return;
+  S.mode=mode; S.program=program;
+  S.stats={peak:0,sum:0,n:0,tut:0,imp:0};
+  setRunButtons(true);
+  const secs=Math.max(0,+$("cd").value|0);
+  if(secs===0){ go(); return; }
+  let n=secs; const el=$("countdown"); el.textContent=n; el.classList.remove("hidden");
+  cdTimer=setInterval(()=>{ n--; if(n<=0){ clearInterval(cdTimer); cdTimer=null; el.classList.add("hidden"); go(); } else el.textContent=n; },1000);
+  function go(){ S.running=true; S.t0=performance.now(); S.elapsed=0; $("stateTxt").textContent="in corso";
+    if(driver===ble){ const r=S.program.at(0.5); const init=(S.mode==="Forza costante")?r:{L:Math.max(r.L,0),R:Math.max(r.R,0)}; ble.begin(init.L,init.R); } }
+}
+function emergencyStop(){
+  if(cdTimer){ clearInterval(cdTimer); cdTimer=null; $("countdown").classList.add("hidden"); }
+  const wasRunning=S.running;
+  S.cmd={L:0,R:0}; S.target={L:0,R:0};      // zero immediato, nessuna rampa
+  driver.stop(); sim.stop();
+  if(wasRunning) finish("fermato con STOP"); else { S.program=null; setRunButtons(false); $("stateTxt").textContent="fermo"; }
+}
+function finish(why){
+  if(driver===ble && ble.active) ble.stop();
+  if(S.running && S.elapsed>2) saveHistory();
+  S.running=false; S.program=null;
+  $("stateTxt").textContent=why; setRunButtons(false);
+}
+function setRunButtons(running){ ["goCircuit","goConst","goIso"].forEach(id=>$(id).disabled=running); }
+
+$("btnStop").addEventListener("click",emergencyStop);
+document.addEventListener("keydown",e=>{ if(e.code==="Space"||e.key==="Escape"){ e.preventDefault(); emergencyStop(); }});
+document.addEventListener("visibilitychange",()=>{ if(document.hidden && $("autoStopHidden").checked) emergencyStop(); });
+
+$("goCircuit").addEventListener("click",()=>{
+  try{
+    const segs=parseSegments($("segText").value);
+    const prog=makeCircuit(segs, Math.max(1,+$("laps").value|0), +$("kgPerG").value, $("invert").checked);
+    buildSegBar(segs); $("lapTot").textContent=prog.laps;
+    $("segWrap").classList.remove("hidden");
+    start("Circuito: "+$("preset").value, prog);
+  }catch(e){ $("stateTxt").textContent="errore: "+e.message; }
+});
+$("goConst").addEventListener("click",()=>{ $("segWrap").classList.add("hidden"); start("Forza costante",makeConstant()); });
+$("goIso").addEventListener("click",()=>{ $("segWrap").classList.add("hidden"); start("Isometrico",makeIso()); });
+
+/* =========================================================
+   RENDER
+   ========================================================= */
+const cv=$("chart"), ctx=cv.getContext("2d");
+function render(act,info,maxKg){
+  $("gL").textContent=act.L.toFixed(1); $("gR").textContent=act.R.toFixed(1);
+  $("tL").textContent=S.target.L.toFixed(1); $("tR").textContent=S.target.R.toFixed(1);
+  $("bL").style.width=Math.min(100,act.L/maxKg*100)+"%"; $("bR").style.width=Math.min(100,act.R/maxKg*100)+"%";
+  const e=Math.floor(S.elapsed); $("timeTxt").textContent=S.running?`${Math.floor(e/60)}:${String(e%60).padStart(2,"0")}`:$("timeTxt").textContent;
+  $("sPeak").textContent=S.stats.peak.toFixed(1);
+  $("sAvg").textContent=(S.stats.n?S.stats.sum/S.stats.n:0).toFixed(1);
+  $("sTut").textContent=Math.round(S.stats.tut);
+  $("sImp").textContent=Math.round(S.stats.imp);
+  if(info && info.name!==undefined){
+    $("segName").textContent=info.name; $("lapNow").textContent=info.lap; $("gNow").textContent=info.g.toFixed(1);
+    const p=S.program, tLap=S.elapsed-(info.lap-1)*p.lapLen;
+    $("segCursor").style.left=`calc(${Math.min(100,tLap/p.lapLen*100)}% - 1px)`;
+  } else if(info && info.iso){
+    $("stateTxt").textContent=`${info.phase} · rip ${info.rep}/${info.reps} · ${info.left.toFixed(0)} s`;
+  }
+  drawChart(maxKg);
+}
+function drawChart(maxKg){
+  const dpr=window.devicePixelRatio||1, w=cv.clientWidth, h=cv.clientHeight;
+  if(cv.width!==w*dpr||cv.height!==h*dpr){ cv.width=w*dpr; cv.height=h*dpr; }
+  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
+  const pad=26, now=performance.now()/1000, top=Math.max(2,maxKg);
+  ctx.strokeStyle="#2a2f38"; ctx.fillStyle="#8b93a1"; ctx.font="10px sans-serif"; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){ const y=h-pad/2-(h-pad)*(i/4); ctx.beginPath(); ctx.moveTo(pad,y); ctx.lineTo(w,y); ctx.stroke(); ctx.fillText((top*i/4).toFixed(0),4,y+3); }
+  const X=t=>pad+(w-pad)*(1-(now-t)/20), Y=v=>h-pad/2-(h-pad)*(v/top);
+  const line=(key,color,dash)=>{ ctx.beginPath(); ctx.setLineDash(dash?[4,4]:[]); ctx.strokeStyle=color; ctx.lineWidth=dash?1.5:2.5;
+    S.samples.forEach((s,i)=>{ const x=X(s.t),y=Y(s[key]); i?ctx.lineTo(x,y):ctx.moveTo(x,y); }); ctx.stroke(); };
+  line("tl","#4ea1ff88",true); line("tr","#ff8a3d88",true);
+  line("al","#4ea1ff",false); line("ar","#ff8a3d",false);
+  ctx.setLineDash([]);
+}
+function buildSegBar(segs){
+  const tot=segs.reduce((a,s)=>a+s.dur,0), bar=$("segbar"); bar.innerHTML="";
+  segs.forEach(s=>{ const d=document.createElement("div"); d.style.width=(s.dur/tot*100)+"%"; d.style.background=SEG_COLORS[s.tipo];
+    d.textContent=s.tipo==="dritto"?"":s.tipo; bar.appendChild(d); });
+  const c=document.createElement("div"); c.className="cursor"; c.id="segCursor"; bar.appendChild(c);
+}
+
+/* =========================================================
+   STORICO
+   ========================================================= */
+function saveHistory(){
+  const h=store.get("kartHist",[]);
+  h.unshift({d:new Date().toISOString(),m:S.mode,dur:Math.round(S.elapsed),pk:+S.stats.peak.toFixed(1),imp:Math.round(S.stats.imp)});
+  store.set("kartHist",h.slice(0,100)); renderHistory();
+}
+function renderHistory(){
+  const h=store.get("kartHist",[]);
+  $("histBody").innerHTML = h.length? h.map(r=>`<tr><td>${new Date(r.d).toLocaleString("it-IT",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</td><td>${r.m}</td><td>${Math.floor(r.dur/60)}:${String(r.dur%60).padStart(2,"0")}</td><td>${r.pk} kg</td><td>${r.imp}</td></tr>`).join("")
+    : `<tr><td colspan="5" style="color:var(--muted)">Ancora nessuna sessione.</td></tr>`;
+}
+$("histClear").addEventListener("click",()=>{ store.set("kartHist",[]); renderHistory(); });
+
+/* =========================================================
+   UI: tab, slider, preset, impostazioni salvate
+   ========================================================= */
+document.querySelectorAll("#tabs button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("on",x===b));
+  document.querySelectorAll("[data-panel]").forEach(p=>p.classList.toggle("hidden",p.dataset.panel!==b.dataset.tab));
+}));
+const presetSel=$("preset");
+Object.keys(PRESETS).forEach(k=>{ const o=document.createElement("option"); o.textContent=k; presetSel.appendChild(o); });
+const custom=document.createElement("option"); custom.textContent="Personalizzato"; presetSel.appendChild(custom);
+presetSel.addEventListener("change",()=>{ if(PRESETS[presetSel.value]) $("segText").value=PRESETS[presetSel.value]; });
+$("segText").addEventListener("input",()=>{ presetSel.value="Personalizzato"; store.set("kartCustom",$("segText").value); });
+
+function bindRange(id,outId,fmt){ const el=$(id), o=$(outId); const f=()=>o.textContent=fmt?fmt(el.value):el.value; el.addEventListener("input",f); f(); }
+bindRange("maxKg","maxKgV"); bindRange("ramp","rampV");
+bindRange("cL","cLv",v=>(+v).toFixed(1)); bindRange("cR","cRv",v=>(+v).toFixed(1));
+$("cL").addEventListener("input",()=>{ if($("cLink").checked){ $("cR").value=$("cL").value; $("cRv").textContent=(+$("cL").value).toFixed(1);} });
+$("cR").addEventListener("input",()=>{ if($("cLink").checked){ $("cL").value=$("cR").value; $("cLv").textContent=(+$("cR").value).toFixed(1);} });
+
+const SAVED=["maxKg","ramp","cd","kgPerG","laps"];
+SAVED.forEach(id=>{ const v=store.get("kart_"+id,null); if(v!=null){ $(id).value=v; $(id).dispatchEvent(new Event("input")); }
+  $(id).addEventListener("change",()=>store.set("kart_"+id,$(id).value)); });
+
+const savedCustom=store.get("kartCustom",null);
+if(savedCustom){ presetSel.value="Personalizzato"; $("segText").value=savedCustom; } else { $("segText").value=PRESETS[presetSel.value]; }
+
+/* =========================================================
+   UI BLUETOOTH
+   ========================================================= */
+function onDriverChange(){
+  driver = ble.connected ? ble : sim;
+  const p=$("connPill");
+  if(ble.connected){ p.textContent="● Bluetooth: "+(ble.device.name||"collegato"); p.className="pill ok"; }
+  else { p.textContent="● Simulatore"; p.className="pill warn"; }
+}
+if(!navigator.bluetooth){
+  const w=$("bleUnsupported"); w.classList.remove("hidden");
+  w.innerHTML="Questo browser non supporta il Bluetooth web (normale su iPad e iPhone). Qui puoi usare il <b>simulatore</b>; la connessione alla macchina si prova dal tablet Lenovo con Chrome.";
+  ["bleConnect","bleSend"].forEach(id=>$(id).disabled=true);
+}
+$("bleConnect").addEventListener("click",async()=>{
+  emergencyStop();
+  try{
+    const chars=await ble.connect();
+    const sel=$("bleChar"); sel.innerHTML="";
+    chars.forEach((c,i)=>{ const o=document.createElement("option"); o.value=i; o.textContent=c.uuid.slice(4,8)+"  "+c.uuid; sel.appendChild(o); });
+  }catch(e){ log("Errore: "+e.message); }
+  onDriverChange();
+});
+$("bleDisconnect").addEventListener("click",()=>{ emergencyStop(); ble.disconnect(); setTimeout(onDriverChange,600); });
+$("bleSend").addEventListener("click",async()=>{
+  const hex=$("bleHex").value.replace(/[^0-9a-f]/gi,"");
+  if(!hex||hex.length%2){ log("HEX non valido."); return; }
+  const bytes=new Uint8Array(hex.match(/../g).map(h=>parseInt(h,16)));
+  try{ await ble.writeRaw(+$("bleChar").value,bytes); }catch(e){ log("Errore invio: "+e.message); }
+});
+$("logCopy").addEventListener("click",async()=>{ try{ await navigator.clipboard.writeText(logLines.join("\n")); log("Registro copiato."); }catch(e){ log("Copia non riuscita: seleziona il testo a mano."); } });
+
+renderHistory();
+log("App pronta. Modalità simulatore attiva.");
+</script>
+</body>
+</html>
