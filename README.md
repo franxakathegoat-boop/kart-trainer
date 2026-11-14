@@ -1,0 +1,2 @@
+# kart-trainer
+claude
