@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1013">
 <title>Kart Neck Trainer – Sintesi</title>
 <style>
   :root{
@@ -14,20 +15,20 @@
   html,body{margin:0;background:var(--bg);color:var(--text);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
   body{padding:calc(12px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left))}
-  .wrap{max-width:1100px;margin:0 auto;display:grid;gap:12px}
-  header{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  header h1{font-size:18px;margin:0;letter-spacing:.3px;flex:1;min-width:160px}
+  .wrap{max-width:1150px;margin:0 auto;display:grid;gap:12px}
+  header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:5;background:var(--bg);padding:6px 0}
+  header h1{font-size:18px;margin:0;letter-spacing:.3px;flex:1;min-width:150px}
   header h1 small{display:block;color:var(--muted);font-weight:400;font-size:12px}
   .pill{font-size:12px;padding:6px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);white-space:nowrap}
   .pill.ok{color:var(--ok);border-color:#235e3d}
   .pill.warn{color:var(--warn);border-color:#6b5716}
   .stop{background:var(--stop);color:#fff;border:0;border-radius:var(--radius);font-weight:800;font-size:18px;
-    padding:14px 22px;letter-spacing:1px;box-shadow:0 0 0 3px #ff3b3b33}
+    padding:14px 24px;letter-spacing:1px;box-shadow:0 0 0 3px #ff3b3b33;touch-action:manipulation}
   .stop:active{transform:scale(.97)}
   .grid{display:grid;gap:12px;grid-template-columns:1fr}
-  @media(min-width:860px){.grid{grid-template-columns:1.45fr 1fr}}
+  @media(min-width:880px){.grid{grid-template-columns:1.4fr 1fr}}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
-  .card h2{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:0 0 10px}
+  .card h2,.h2{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:0 0 10px}
   .gauges{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .gauge{background:var(--panel2);border-radius:12px;padding:12px;position:relative;overflow:hidden}
   .gauge .lbl{font-size:12px;color:var(--muted)}
@@ -37,36 +38,49 @@
   .gauge .bar{position:absolute;left:0;bottom:0;height:5px;transition:width .1s}
   .gauge.l .val{color:var(--left)} .gauge.l .bar{background:var(--left)}
   .gauge.r .val{color:var(--right)} .gauge.r .bar{background:var(--right)}
-  canvas{width:100%;height:190px;display:block;background:var(--panel2);border-radius:12px;margin-top:10px}
-  .segbar{display:flex;height:26px;border-radius:8px;overflow:hidden;margin-top:10px;position:relative;background:var(--panel2)}
-  .segbar div{height:100%;font-size:10px;display:flex;align-items:center;justify-content:center;color:#0008;font-weight:700;overflow:hidden;white-space:nowrap}
+  canvas{width:100%;display:block;background:var(--panel2);border-radius:12px}
+  #chart{height:190px;margin-top:10px}
+  #histChart{height:140px;margin:6px 0 10px}
+  #gmeter{width:120px;height:120px;flex:0 0 auto}
+  .gline{display:flex;gap:12px;align-items:center;margin-top:10px}
+  .gline .info{flex:1;font-size:13px;color:var(--muted);line-height:1.6}
+  .gline .info b{color:var(--text)}
+  .segbar{display:flex;height:22px;border-radius:8px;overflow:hidden;margin-top:8px;position:relative;background:var(--panel2)}
+  .segbar div{height:100%;font-size:10px;display:flex;align-items:center;justify-content:center;color:#0009;font-weight:700;overflow:hidden;white-space:nowrap}
   .segbar .cursor{position:absolute;top:-3px;bottom:-3px;width:3px;background:#fff;border-radius:2px;box-shadow:0 0 6px #fff}
   .now{display:flex;justify-content:space-between;gap:8px;margin-top:8px;font-size:13px;color:var(--muted);flex-wrap:wrap}
   .now b{color:var(--text)}
   .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-  .tabs button{flex:1;min-width:90px;background:var(--panel2);color:var(--muted);border:1px solid var(--line);
-    border-radius:10px;padding:10px 8px;font-size:14px;font-weight:600}
+  .tabs button{flex:1;min-width:84px;background:var(--panel2);color:var(--muted);border:1px solid var(--line);
+    border-radius:10px;padding:10px 6px;font-size:14px;font-weight:600}
   .tabs button.on{color:var(--text);border-color:var(--left);background:#1b2a3d}
+  .seg{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+  .seg button{flex:1;background:none;border:0;color:var(--muted);padding:8px 4px;border-radius:8px;font-size:13px;font-weight:600}
+  .seg button.on{background:#2a3b52;color:var(--text)}
   label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+  label.chk{display:flex;gap:8px;align-items:flex-start;color:var(--text)}
+  label.chk input{margin-top:2px}
   .row{display:flex;gap:10px;align-items:center}
-  .row > *{flex:1}
+  .row > *{flex:1;min-width:0}
   input[type=range]{width:100%;accent-color:var(--left)}
-  input[type=number],select,textarea,input[type=text]{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);
+  input[type=number],select,textarea,input[type=text],input[type=file]{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);
     border-radius:10px;padding:10px;font-size:15px;font-family:inherit}
-  textarea{font-family:ui-monospace,Menlo,monospace;font-size:13px;min-height:150px;resize:vertical}
+  textarea{font-family:ui-monospace,Menlo,monospace;font-size:13px;min-height:140px;resize:vertical}
   .big{width:100%;border:0;border-radius:12px;padding:14px;font-size:17px;font-weight:800;margin-top:14px}
   .go{background:var(--ok);color:#06210f}
   .go:disabled{opacity:.4}
   .ghost{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;font-weight:600}
-  .note{font-size:12px;color:var(--muted);line-height:1.45;margin-top:8px}
+  .ghost:disabled{opacity:.4}
+  .note{font-size:12px;color:var(--muted);line-height:1.5;margin:8px 0 0}
   .warnbox{background:#2a2310;border:1px solid #6b5716;color:#ffe08a;border-radius:10px;padding:10px;font-size:13px;line-height:1.45}
+  .okbox{background:#0f2a1b;border:1px solid #235e3d;color:#a6f0c6;border-radius:10px;padding:10px;font-size:13px;line-height:1.45}
   .hidden{display:none !important}
   .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
   .stats div{background:var(--panel2);border-radius:10px;padding:8px;text-align:center}
   .stats b{display:block;font-size:20px;font-variant-numeric:tabular-nums}
   .stats span{font-size:11px;color:var(--muted)}
   .log{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;background:#0a0c0f;border-radius:10px;padding:10px;
-    height:180px;overflow:auto;white-space:pre-wrap;color:#b9c2cf;margin-top:8px}
+    height:170px;overflow:auto;white-space:pre-wrap;color:#b9c2cf;margin-top:8px}
   table{width:100%;border-collapse:collapse;font-size:13px}
   td,th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left}
   th{color:var(--muted);font-weight:600}
@@ -74,19 +88,31 @@
     font-size:120px;font-weight:900;z-index:20}
   .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
   .chips span{font-size:11px;padding:3px 8px;border-radius:6px;color:#000;font-weight:700}
+  .steps{display:grid;gap:10px}
+  .step{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px}
+  .step h3{margin:0 0 4px;font-size:15px;display:flex;gap:8px;align-items:center}
+  .step h3 .st{margin-left:auto;font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;background:#2a2f38;color:var(--muted)}
+  .step h3 .st.pass{background:#164a2c;color:var(--ok)} .step h3 .st.fail{background:#4a1616;color:#ff8080} .step h3 .st.run{background:#4a3d16;color:var(--warn)}
+  .step p{margin:4px 0;font-size:13px;color:var(--muted);line-height:1.5}
+  .step .res{font-size:13px;margin-top:6px;color:var(--text)}
+  .step .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .step .btns button{flex:1;min-width:110px}
+  svg.diagram{width:100%;max-width:420px;display:block;margin:6px auto 0}
+  ol.howto{padding-left:20px;margin:6px 0;font-size:13px;line-height:1.6;color:var(--text)}
+  ol.howto li{margin-bottom:4px}
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <header>
-    <h1>Kart Neck Trainer<small>Per Sintesi by Akuis · prototipo</small></h1>
+    <h1>Kart Neck Trainer<small>Sintesi by Akuis · v2</small></h1>
     <span id="connPill" class="pill warn">● Simulatore</span>
     <button class="stop" id="btnStop">STOP</button>
   </header>
 
   <div class="grid">
-    <!-- LIVE -->
+    <!-- ================= LIVE ================= -->
     <section class="card">
       <h2>Live</h2>
       <div class="gauges">
@@ -100,9 +126,16 @@
       <canvas id="chart"></canvas>
       <div id="segWrap" class="hidden">
         <div class="segbar" id="segbar"></div>
-        <div class="now"><span>Tratto: <b id="segName">–</b></span><span>Giro <b id="lapNow">0</b>/<b id="lapTot">0</b></span><span>G laterali: <b id="gNow">0.0</b></span></div>
       </div>
-      <div class="now"><span>Stato: <b id="stateTxt">fermo</b></span><span>Tempo: <b id="timeTxt">0:00</b></span></div>
+      <div class="gline">
+        <canvas id="gmeter"></canvas>
+        <div class="info">
+          Stato: <b id="stateTxt">fermo</b><br>
+          Tempo: <b id="timeTxt">0:00</b> · Giro <b id="lapNow">–</b><br>
+          Tratto: <b id="segName">–</b><br>
+          G laterali <b id="gLat">0.0</b> · frenata <b id="gLon">0.0</b>
+        </div>
+      </div>
 
       <h2 style="margin-top:16px">Sessione</h2>
       <div class="stats">
@@ -113,100 +146,190 @@
       </div>
     </section>
 
-    <!-- CONTROLLI -->
+    <!-- ================= CONTROLLI ================= -->
     <section class="card">
       <div class="tabs" id="tabs">
-        <button data-tab="circuito" class="on">Circuito</button>
-        <button data-tab="costante">Costante</button>
-        <button data-tab="iso">Isometrico</button>
-        <button data-tab="setup">Sicurezza</button>
+        <button data-tab="allena" class="on">Allena</button>
+        <button data-tab="test">Test macchina</button>
+        <button data-tab="setup">Setup</button>
         <button data-tab="ble">Bluetooth</button>
         <button data-tab="storico">Storico</button>
       </div>
 
-      <!-- CIRCUITO -->
-      <div data-panel="circuito">
-        <label>Profilo</label>
-        <select id="preset"></select>
-        <label>Tratti (tipo · secondi · G)</label>
-        <textarea id="segText" spellcheck="false"></textarea>
-        <div class="chips">
-          <span style="background:var(--left)">sx = curva sinistra</span>
-          <span style="background:var(--right)">dx = curva destra</span>
-          <span style="background:#c9ced6">dritto</span>
-          <span style="background:#ff6b6b">frenata</span>
-          <span style="background:var(--warn)">cordolo</span>
+      <!-- ---------- ALLENA ---------- -->
+      <div data-panel="allena">
+        <div class="seg" id="modeSeg">
+          <button data-mode="circuito" class="on">Circuito</button>
+          <button data-mode="costante">Costante</button>
+          <button data-mode="iso">Isometrico</button>
         </div>
-        <div class="row">
-          <div><label>Giri</label><input type="number" id="laps" min="1" max="50" value="5"></div>
-          <div><label>kg per 1 G</label><input type="number" id="kgPerG" min="0.5" max="10" step="0.5" value="2.5"></div>
+
+        <!-- CIRCUITO -->
+        <div data-mode-panel="circuito">
+          <label>Fonte del giro</label>
+          <div class="seg" id="srcSeg">
+            <button data-src="tratti" class="on">Tratti</button>
+            <button data-src="csv">Telemetria CSV</button>
+          </div>
+
+          <div data-src-panel="tratti">
+            <label>Profilo</label>
+            <select id="preset"></select>
+            <label>Tratti (tipo · secondi · G)</label>
+            <textarea id="segText" spellcheck="false"></textarea>
+            <div class="chips">
+              <span style="background:var(--left)">sx curva sinistra</span>
+              <span style="background:var(--right)">dx curva destra</span>
+              <span style="background:#c9ced6">dritto</span>
+              <span style="background:#ff6b6b">frenata</span>
+              <span style="background:var(--warn)">cordolo</span>
+            </div>
+          </div>
+
+          <div data-src-panel="csv" class="hidden">
+            <p class="note" style="margin-top:8px">Esporta un giro dal tuo data logger (AiM Race Studio, Alfano, MyChron, RaceChrono…) in CSV, con il tempo e l'accelerazione laterale. Se c'è anche quella longitudinale, la usiamo per le frenate.</p>
+            <input type="file" id="csvFile" accept=".csv,.txt,text/csv" style="margin-top:8px">
+            <div id="csvCols" class="hidden">
+              <div class="row">
+                <div><label>Tempo</label><select id="colT"></select></div>
+                <div><label>G laterale</label><select id="colLat"></select></div>
+                <div><label>G longitudinale</label><select id="colLon"></select></div>
+              </div>
+              <div class="row">
+                <div><label>Dal secondo</label><input type="number" id="csvFrom" step="0.1"></div>
+                <div><label>Al secondo</label><input type="number" id="csvTo" step="0.1"></div>
+              </div>
+              <div id="csvInfo" class="okbox" style="margin-top:10px"></div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div><label>Giri</label><input type="number" id="laps" min="1" max="50" value="5"></div>
+            <div><label>kg per 1 G</label><input type="number" id="kgPerG" min="0.5" max="10" step="0.5" value="2.5"></div>
+          </div>
+          <label>Intensità: <b id="intV">100</b>%</label>
+          <input type="range" id="intensity" min="20" max="150" step="5" value="100">
+          <label class="chk"><input type="checkbox" id="useBrake" checked> Usa le frenate (tirano entrambe le colonne)</label>
+          <label class="chk"><input type="checkbox" id="invert"> Inverti i lati</label>
+          <p class="note">La posizione del corpo (al centro o di fianco) si sceglie in <b>Setup</b>.</p>
+          <button class="big go" id="goCircuit">▶ Avvia circuito</button>
         </div>
-        <label><input type="checkbox" id="invert"> Inverti lati (curva a destra = tira la colonna destra)</label>
-        <p class="note">Di default una curva a <b>destra</b> fa tirare la colonna <b>sinistra</b>: come in pista, la forza centrifuga spinge la testa verso l'esterno e il collo deve resistere. La frenata tira entrambe le colonne. Il cordolo aggiunge vibrazione.</p>
-        <button class="big go" id="goCircuit">▶ Avvia circuito</button>
+
+        <!-- COSTANTE -->
+        <div data-mode-panel="costante" class="hidden">
+          <label>Sinistra: <b id="cLv">5.0</b> kg</label>
+          <input type="range" id="cL" min="0" max="30" step="0.5" value="5">
+          <label>Destra: <b id="cRv">5.0</b> kg</label>
+          <input type="range" id="cR" min="0" max="30" step="0.5" value="5">
+          <label class="chk"><input type="checkbox" id="cLink" checked> Stesso carico sui due lati</label>
+          <label>Durata (s, 0 = finché premi STOP)</label>
+          <input type="number" id="cDur" min="0" max="3600" value="60">
+          <button class="big go" id="goConst">▶ Avvia forza costante</button>
+        </div>
+
+        <!-- ISOMETRICO -->
+        <div data-mode-panel="iso" class="hidden">
+          <div class="row">
+            <div><label>Carico kg</label><input type="number" id="iKg" min="0.5" max="30" step="0.5" value="5"></div>
+            <div><label>Ripetizioni</label><input type="number" id="iReps" min="1" max="50" value="8"></div>
+          </div>
+          <div class="row">
+            <div><label>Lavoro s</label><input type="number" id="iWork" min="1" max="120" value="10"></div>
+            <div><label>Recupero s</label><input type="number" id="iRest" min="0" max="300" value="15"></div>
+          </div>
+          <label>Lato</label>
+          <select id="iSide">
+            <option value="alt">Alternato sinistra / destra</option>
+            <option value="both">Entrambi</option>
+            <option value="L">Solo sinistra</option>
+            <option value="R">Solo destra</option>
+          </select>
+          <label>Salita del carico (s)</label>
+          <input type="number" id="iRamp" min="0" max="10" step="0.5" value="1.5">
+          <p class="note">Testa ferma mentre la forza sale, resta e scende: è lo sforzo più simile alla guida.</p>
+          <button class="big go" id="goIso">▶ Avvia isometrico</button>
+        </div>
       </div>
 
-      <!-- COSTANTE -->
-      <div data-panel="costante" class="hidden">
-        <label>Sinistra: <b id="cLv">5.0</b> kg</label>
-        <input type="range" id="cL" min="0" max="30" step="0.5" value="5">
-        <label>Destra: <b id="cRv">5.0</b> kg</label>
-        <input type="range" id="cR" min="0" max="30" step="0.5" value="5">
-        <label><input type="checkbox" id="cLink" checked> Stesso carico su entrambi i lati</label>
-        <label>Durata (secondi, 0 = finché premi STOP)</label>
-        <input type="number" id="cDur" min="0" max="3600" value="60">
-        <p class="note">Forza costante: il motore mantiene il carico qualunque sia la posizione del cavo. Si può cambiare mentre è in corso.</p>
-        <button class="big go" id="goConst">▶ Avvia forza costante</button>
+      <!-- ---------- TEST MACCHINA ---------- -->
+      <div data-panel="test" class="hidden">
+        <div class="warnbox">Da fare <b>una volta</b> in palestra, con il tablet o l'iPad (Bluefy) vicino alla macchina. Ogni prova dura meno di 20 secondi e usa al massimo 6 kg. Pulsante rosso sempre a portata di mano.</div>
+        <div class="steps" style="margin-top:10px">
+          <div class="step" id="T1">
+            <h3>1 · Collegamento <span class="st">da fare</span></h3>
+            <p>Nell'app Sintesi premi DISCONNETTI e chiudila. Poi premi qui sotto e scegli <b>SINTESI</b>.</p>
+            <div class="btns"><button class="ghost" data-test="1">Collega SINTESI</button></div>
+            <div class="res"></div>
+          </div>
+          <div class="step" id="T2">
+            <h3>2 · Carico costante 5 kg <span class="st">da fare</span></h3>
+            <p>Prendi le due maniglie. Dopo il conto alla rovescia <b>tira piano entrambi i cavi</b> di 30–40 cm e tienili fermi fino alla fine (15 s).</p>
+            <div class="btns"><button class="ghost" data-test="2">Avvia prova 2</button></div>
+            <div class="res"></div>
+          </div>
+          <div class="step" id="T3">
+            <h3>3 · Cambio carico in corsa <span class="st">da fare</span></h3>
+            <p>Come prima, cavi tirati e fermi per 18 s. Il carico passa da <b>3 → 6 → 3 kg</b>. Dovresti sentirlo salire a metà e poi scendere.</p>
+            <div class="btns"><button class="ghost" data-test="3">Avvia prova 3</button></div>
+            <div class="res"></div>
+          </div>
+          <div class="step" id="T4">
+            <h3>4 · Lati diversi <span class="st">da fare</span></h3>
+            <p>Cavi tirati e fermi per 15 s. Un lato dovrebbe stare a <b>3 kg</b>, l'altro a <b>6 kg</b>. Alla fine dimmi quale era più pesante.</p>
+            <div class="btns"><button class="ghost" data-test="4">Avvia prova 4</button></div>
+            <div class="btns hidden" id="T4ask">
+              <button class="ghost" data-heavy="L">Più pesante a SINISTRA</button>
+              <button class="ghost" data-heavy="R">Più pesante a DESTRA</button>
+              <button class="ghost" data-heavy="=">Uguali</button>
+            </div>
+            <div class="res"></div>
+          </div>
+          <div class="step">
+            <h3>Risultati</h3>
+            <p>Copia e incolla questo testo nella chat con Claude: con quello sistemo le opzioni sperimentali.</p>
+            <div class="btns"><button class="ghost" id="copyResults">Copia risultati</button></div>
+          </div>
+        </div>
       </div>
 
-      <!-- ISOMETRICO -->
-      <div data-panel="iso" class="hidden">
-        <div class="row">
-          <div><label>Carico kg</label><input type="number" id="iKg" min="0.5" max="30" step="0.5" value="6"></div>
-          <div><label>Ripetizioni</label><input type="number" id="iReps" min="1" max="50" value="8"></div>
-        </div>
-        <div class="row">
-          <div><label>Lavoro s</label><input type="number" id="iWork" min="1" max="120" value="10"></div>
-          <div><label>Recupero s</label><input type="number" id="iRest" min="0" max="300" value="15"></div>
-        </div>
-        <label>Lato</label>
-        <select id="iSide">
-          <option value="alt">Alternato sinistra / destra</option>
-          <option value="both">Entrambi</option>
-          <option value="L">Solo sinistra</option>
-          <option value="R">Solo destra</option>
-        </select>
-        <label>Salita del carico (s)</label>
-        <input type="number" id="iRamp" min="0" max="10" step="0.5" value="1.5">
-        <p class="note">Tieni la testa ferma mentre la forza sale, resta e scende. È lo sforzo più simile alla guida reale.</p>
-        <button class="big go" id="goIso">▶ Avvia isometrico</button>
-      </div>
-
-      <!-- SICUREZZA -->
+      <!-- ---------- SETUP ---------- -->
       <div data-panel="setup" class="hidden">
-        <div class="warnbox">Questi limiti valgono per <b>tutte</b> le modalità e non si possono superare. Inizia basso: per il collo pochi kg sono già tanti.</div>
+        <h2 class="h2">Posizione</h2>
+        <div class="seg" id="posSeg">
+          <button data-pos="centro" class="on">Al centro</button>
+          <button data-pos="fiancoSx">Colonna alla tua sinistra</button>
+          <button data-pos="fiancoDx">Colonna alla tua destra</button>
+        </div>
+        <div id="posDiagram"></div>
+        <ol class="howto" id="posHowto"></ol>
+
+        <h2 class="h2" style="margin-top:16px">Sicurezza</h2>
+        <div class="warnbox">Questi limiti valgono per tutte le modalità. Inizia basso: per il collo pochi kg sono già tanti.</div>
         <label>Forza massima per lato: <b id="maxKgV">12</b> kg</label>
-        <input type="range" id="maxKg" min="1" max="40" step="0.5" value="12">
+        <input type="range" id="maxKg" min="3" max="40" step="0.5" value="12">
         <label>Velocità massima di variazione: <b id="rampV">8</b> kg/s</label>
         <input type="range" id="ramp" min="1" max="40" step="1" value="8">
-        <label>Conto alla rovescia prima di partire (s)</label>
+        <label>Carico minimo della macchina (kg)</label>
+        <input type="number" id="minKg" min="0" max="5" step="0.5" value="3">
+        <p class="note">Sintesi tiene circa 3 kg anche "a riposo". Il simulatore lo imita, così vedi i numeri reali.</p>
+        <label>Conto alla rovescia (s)</label>
         <input type="number" id="cd" min="0" max="10" value="3">
-        <label><input type="checkbox" id="autoStopHidden" checked> Ferma tutto se l'app va in secondo piano</label>
-        <p class="note">Il pulsante rosso fisico della macchina resta sempre l'arresto principale. Lo STOP dell'app porta i comandi a zero subito, senza rampa.</p>
+        <label class="chk"><input type="checkbox" id="autoStopHidden" checked> Ferma tutto se l'app va in secondo piano</label>
+        <label class="chk"><input type="checkbox" id="wakeLock" checked> Tieni lo schermo acceso durante l'allenamento</label>
       </div>
 
-      <!-- BLUETOOTH -->
+      <!-- ---------- BLUETOOTH ---------- -->
       <div data-panel="ble" class="hidden">
-        <div id="bleUnsupported" class="warnbox hidden"></div>
-        <div class="warnbox" style="margin-bottom:8px">Prima di collegarti: nell'app Sintesi premi <b>DISCONNETTI</b> e chiudila. La macchina accetta un solo collegamento alla volta. Prove a carico basso, pulsante rosso a portata di mano.</div>
+        <div id="bleUnsupported" class="warnbox hidden" style="margin-bottom:8px"></div>
+        <div class="warnbox" style="margin-bottom:8px">Prima di collegarti: nell'app Sintesi premi <b>DISCONNETTI</b> e chiudila. La macchina accetta un solo collegamento alla volta.</div>
         <div class="row">
           <button class="ghost" id="bleConnect">Collega SINTESI</button>
           <button class="ghost" id="bleDisconnect">Scollega</button>
         </div>
-        <div class="now"><span>Stato macchina: <b id="mState">–</b></span><span>Allarmi: <b id="mAlarm">–</b></span></div>
-        <label><input type="checkbox" id="bleLive"> Aggiorna il carico <b>durante</b> l'esercizio (sperimentale – serve per Circuito e Isometrico)</label>
-        <label><input type="checkbox" id="bleSplit"> Carichi diversi sinistra/destra (sperimentale)</label>
-        <p class="note">Senza queste due opzioni l'app fa solo quello che abbiamo già visto fare all'app Sintesi: imposta un carico uguale sui due lati, avvia, ferma. Le opzioni sperimentali vanno provate prima a 3–5 kg.</p>
+        <div class="now"><span>Macchina: <b id="mState">–</b></span><span>Allarmi: <b id="mAlarm">–</b></span></div>
+        <label class="chk"><input type="checkbox" id="bleLive"> Aggiorna il carico <b>durante</b> l'esercizio (serve per Circuito e Isometrico; si conferma con la prova 3)</label>
+        <label class="chk"><input type="checkbox" id="bleSplit"> Carichi diversi sinistra/destra (si conferma con la prova 4)</label>
+        <label class="chk"><input type="checkbox" id="bleSwap"> Scambia sinistra/destra nei comandi</label>
         <details style="margin-top:10px"><summary class="note" style="cursor:pointer">Avanzato: scrittura grezza</summary>
           <select id="bleChar" style="margin-top:6px"></select>
           <div class="row" style="margin-top:6px">
@@ -218,12 +341,14 @@
         <div class="log" id="log"></div>
       </div>
 
-      <!-- STORICO -->
+      <!-- ---------- STORICO ---------- -->
       <div data-panel="storico" class="hidden">
+        <h2 class="h2">Impulso per sessione (kg·s)</h2>
+        <canvas id="histChart"></canvas>
         <table><thead><tr><th>Data</th><th>Modalità</th><th>Durata</th><th>Picco</th><th>Impulso</th></tr></thead>
           <tbody id="histBody"></tbody></table>
         <p class="note">Lo storico resta solo su questo dispositivo e in questo browser.</p>
-        <button class="ghost" id="histClear">Cancella storico</button>
+        <button class="ghost" id="histClear" style="margin-top:8px">Cancella storico</button>
       </div>
     </section>
   </div>
@@ -233,7 +358,21 @@
 <script>
 "use strict";
 /* =========================================================
-   CONFIG & PRESET
+   UTILITÀ
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const smoothstep=x=>{ x=clamp(x,0,1); return x*x*(3-2*x); };
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v);}catch(e){return d;} },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+};
+const logLines=[];
+function log(msg){ const t=new Date().toLocaleTimeString(); logLines.push(`[${t}] ${msg}`); if(logLines.length>600) logLines.shift(); $("log").textContent=logLines.join("\n"); $("log").scrollTop=1e9; }
+async function copyText(txt){ try{ await navigator.clipboard.writeText(txt); return true; }catch(e){ return false; } }
+
+/* =========================================================
+   PRESET A TRATTI
    ========================================================= */
 const PRESETS = {
   "Circuito tecnico (demo)": `dritto 4 0
@@ -278,28 +417,119 @@ dritto 3 0
 sx 4 1.8`
 };
 const SEG_COLORS = {sx:"#4ea1ff", dx:"#ff8a3d", dritto:"#c9ced6", frenata:"#ff6b6b", cordolo:"#ffcc33"};
-const TICK_MS = 50;
 
 /* =========================================================
-   STORAGE (safe)
+   PROFILI DI GIRO: at(t) -> {lat (+ = curva a destra), lon (+ = frenata), kerb, label}
    ========================================================= */
-const store = {
-  get(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v);}catch(e){return d;} },
-  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
-};
+function parseSegments(txt){
+  const out=[];
+  txt.split(/\n/).forEach((line,i)=>{
+    const l=line.trim().toLowerCase(); if(!l||l.startsWith("#")) return;
+    const p=l.split(/\s+/), tipo=p[0], dur=parseFloat(p[1]), g=parseFloat(p[2]||"0");
+    if(!SEG_COLORS[tipo]||!(dur>0)||isNaN(g)) throw new Error(`Riga ${i+1} non valida: "${line.trim()}"`);
+    out.push({tipo,dur,g:clamp(g,0,5)});
+  });
+  if(!out.length) throw new Error("Nessun tratto.");
+  return out;
+}
+function lapFromSegments(segs){
+  const len=segs.reduce((a,s)=>a+s.dur,0);
+  return { len, segs, at(tl){
+    let i=0; while(i<segs.length-1 && tl>=segs[i].dur){ tl-=segs[i].dur; i++; }
+    const s=segs[i], edge=Math.min(0.4,s.dur/3), env=smoothstep(tl/edge)*smoothstep((s.dur-tl)/edge), g=s.g*env;
+    return { lat: s.tipo==="dx"?g : s.tipo==="sx"?-g : 0, lon: s.tipo==="frenata"?g:0, kerb: s.tipo==="cordolo"?g:0, label:s.tipo };
+  }};
+}
+
+/* ---------- CSV telemetria ---------- */
+let CSV=null; // {headers, rows}
+function parseCSV(text){
+  const lines=text.split(/\r?\n/).filter(l=>l.trim().length);
+  // trova il separatore e la riga di intestazione (prima riga con molte colonne non numeriche)
+  const sep=[";",",","\t"].map(s=>[s,(lines.slice(0,40).join("\n").split(s).length)]).sort((a,b)=>b[1]-a[1])[0][0];
+  const split=l=>l.split(sep).map(x=>x.trim().replace(/^"|"$/g,""));
+  let hi=0, best=-1;
+  for(let i=0;i<Math.min(lines.length,60);i++){
+    const c=split(lines[i]); const nonNum=c.filter(x=>x&&isNaN(parseFloat(x.replace(",",".")))).length;
+    const next=lines[i+1]?split(lines[i+1]):[]; const nextNum=next.filter(x=>!isNaN(parseFloat(x.replace(",",".")))).length;
+    if(c.length>=2 && nonNum>=2 && nextNum>=2 && c.length>best){ best=c.length; hi=i; }
+  }
+  let headers=split(lines[hi]);
+  // formato AiM & simili: riga dei nomi seguita dalla riga delle unità (s, g, km/h…)
+  if(hi>0){ const prev=split(lines[hi-1]);
+    if(prev.length===headers.length && prev.every(x=>isNaN(parseFloat(x))) && headers.every(x=>x.length<=6))
+      headers=prev.map((p,i)=>headers[i]?`${p} [${headers[i]}]`:p); }
+  const rows=[];
+  for(let i=hi+1;i<lines.length;i++){
+    const c=split(lines[i]).map(x=>parseFloat(sep===","?x:x.replace(",",".")));
+    if(c.filter(v=>!isNaN(v)).length>=2) rows.push(c);
+  }
+  return {headers,rows};
+}
+function guessCol(headers,re){ const i=headers.findIndex(h=>re.test(h)); return i; }
+function buildCsvLap(){
+  if(!CSV) throw new Error("Carica prima un file CSV.");
+  const it=+$("colT").value, il=+$("colLat").value, io=+$("colLon").value;
+  let pts=CSV.rows.map(r=>({t:r[it],lat:r[il],lon:io>=0?r[io]:0})).filter(p=>!isNaN(p.t)&&!isNaN(p.lat));
+  if(pts.length<10) throw new Error("Troppi pochi dati validi.");
+  // tempo in ms?
+  const dt=(pts[pts.length-1].t-pts[0].t)/(pts.length-1);
+  if(dt>5) pts.forEach(p=>p.t/=1000);
+  const t0=pts[0].t; pts.forEach(p=>p.t-=t0);
+  const from=parseFloat($("csvFrom").value), to=parseFloat($("csvTo").value);
+  if(!isNaN(from)&&!isNaN(to)&&to>from) pts=pts.filter(p=>p.t>=from&&p.t<=to).map(p=>({...p,t:p.t-from}));
+  // unità: m/s² -> G
+  const maxAbs=Math.max(...pts.map(p=>Math.abs(p.lat)));
+  const unit = maxAbs>6 ? 9.81 : 1;
+  pts.forEach(p=>{ p.lat/=unit; p.lon=(isNaN(p.lon)?0:p.lon)/unit; });
+  // media mobile 0.3 s
+  const win=0.15, sm=pts.map((p,i)=>{ let a=0,b=0,n=0; for(let j=i;j>=0&&pts[i].t-pts[j].t<=win;j--){a+=pts[j].lat;b+=pts[j].lon;n++;} for(let j=i+1;j<pts.length&&pts[j].t-pts[i].t<=win;j++){a+=pts[j].lat;b+=pts[j].lon;n++;} return {t:p.t,lat:a/n,lon:b/n}; });
+  const len=sm[sm.length-1].t;
+  // nei logger la frenata è spesso negativa: la rendiamo positiva
+  const brakeSign = Math.abs(Math.min(...sm.map(p=>p.lon))) > Math.max(...sm.map(p=>p.lon)) ? -1 : 1;
+  let k=0;
+  const lap={ len, csv:true, at(tl){
+    if(tl<sm[k].t) k=0;
+    while(k<sm.length-2 && sm[k+1].t<tl) k++;
+    const a=sm[k], b=sm[k+1], f=b.t>a.t?clamp((tl-a.t)/(b.t-a.t),0,1):0;
+    const lat=a.lat+(b.lat-a.lat)*f, lon=(a.lon+(b.lon-a.lon)*f)*brakeSign;
+    return {lat:clamp(lat,-4,4), lon:clamp(Math.max(0,lon),0,3), kerb:0, label: Math.abs(lat)<0.4?"dritto":(lat>0?"dx":"sx")};
+  }};
+  const maxLat=Math.max(...sm.map(p=>Math.abs(p.lat))), maxBrk=Math.max(...sm.map(p=>Math.max(0,p.lon*brakeSign)));
+  return {lap, info:{len,maxLat,maxBrk,unit,n:sm.length}};
+}
 
 /* =========================================================
-   DRIVER: Simulatore
+   DA G A KG SULLE DUE COLONNE
+   ========================================================= */
+let POS=store.get("kartPos","centro");
+function forcesFromG(g,t){
+  const k=+$("kgPerG").value * (+$("intensity").value/100);
+  let lat = $("invert").checked ? -g.lat : g.lat;
+  let L=0,R=0;
+  // curva a destra -> la testa va a sinistra -> resiste tirando la colonna SINISTRA
+  if(lat>0) L+=lat*k; else R+=-lat*k;
+  if($("useBrake").checked && g.lon>0){ L+=g.lon*k; R+=g.lon*k; }
+  if(g.kerb>0){ const v=g.kerb*k*0.6*(0.5+0.5*Math.sin(t*2*Math.PI*8)); L+=v; R+=v; }
+  if(POS==="fiancoSx"){ R=0; L = lat>0 ? lat*k : 0; }   // una sola colonna, solo curve a destra
+  if(POS==="fiancoDx"){ L=0; R = lat<0 ? -lat*k : 0; }  // una sola colonna, solo curve a sinistra
+  return {L,R};
+}
+
+/* =========================================================
+   DRIVER: SIMULATORE
    ========================================================= */
 class SimDriver {
-  constructor(){ this.name="Simulatore"; this.cmd={L:0,R:0}; this.act={L:0,R:0}; }
+  constructor(){ this.name="Simulatore"; this.cmd={L:0,R:0}; this.act={L:0,R:0}; this.active=false; }
+  begin(){ this.active=true; }
   setForce(L,R){ this.cmd.L=L; this.cmd.R=R; }
-  stop(){ this.cmd.L=0; this.cmd.R=0; }
-  tick(dt){ // motore con ritardo del primo ordine + piccolo rumore
-    const a = 1-Math.exp(-dt/0.15);
+  stop(){ this.active=false; this.cmd.L=0; this.cmd.R=0; }
+  tick(dt){
+    const a=1-Math.exp(-dt/0.15);
     for(const s of ["L","R"]){
-      this.act[s] += (this.cmd[s]-this.act[s])*a;
-      if(this.cmd[s]>0.05) this.act[s] += (Math.random()-0.5)*0.08;
+      const target = this.active ? Math.max(+$("minKg").value, this.cmd[s]) : 0;
+      this.act[s]+=(target-this.act[s])*a;
+      if(target>0.05) this.act[s]+=(Math.random()-0.5)*0.06;
       if(this.act[s]<0) this.act[s]=0;
     }
   }
@@ -307,266 +537,203 @@ class SimDriver {
 }
 
 /* =========================================================
-   DRIVER: Bluetooth (esploratore + segnaposto protocollo)
+   DRIVER: SINTESI VIA BLUETOOTH
+   Protocollo ricavato dal registro Bluetooth del 14/11/2026:
+   servizio 6e400001-b5a3-f393-e0a9-e50e24dcca9e, caratteristiche a 16 bit
+   0x0007 scrittura  JSON di avvio {"cmd":0,"comVersion":3,"outputPeriod":80}
+   0xFF03 scrittura  configurazione: 168 byte, int32 little-endian, carico in grammi agli indici 1,2,11,19
+   0xFF07 scrittura  03 00 00 00 = AVVIA · 04 00 00 00 = FERMA
+   0xFF0C notifica   JSON stato: OUT_APP_SEQ 3 = ferma, 4 = in corso; OUT_APP_ALARM
+   0xFF0D notifica   44 byte: int32 indici 2 e 3 = carico attuale (g)
    ========================================================= */
-/* ---------------------------------------------------------
-   PROTOCOLLO SINTESI (ricavato dal registro Bluetooth del 14/11/2026)
-   Servizio 6e400001-b5a3-f393-e0a9-e50e24dcca9e, caratteristiche a 16 bit:
-   0x0007  scrittura  JSON di avvio {"cmd":0,"comVersion":3,"outputPeriod":80}
-   0xFF03  scrittura  configurazione carico: 168 byte, interi a 32 bit little-endian,
-                      carico in grammi agli indici 1, 2, 11, 19 (5 kg -> 5000)
-   0xFF07  scrittura  03 00 00 00 = AVVIA   04 00 00 00 = FERMA
-   0xFF0C  notifica   JSON stato {"OUT_APP_SEQ":3 fermo / 4 in corso, "OUT_APP_ALARM":...}
-   0xFF0D  notifica   telemetria 44 byte: indici 2 e 3 = carico attuale in grammi
-   --------------------------------------------------------- */
-const NUS = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
-const U16 = h => `0000${h}-0000-1000-8000-00805f9b34fb`;
-const CH = { init:U16("0007"), cfg:U16("ff03"), run:U16("ff07"), status:U16("ff0c"), tele:U16("ff0d"), resp:U16("0002") };
-const CFG_TEMPLATE = "00000000881300008813000000000000000000000000000000000000010000000000000000000000000000008813000000000000000000000000000000000000000000000000000000000000881300000000000000000000000000000000000000000000000000000000000000000000a861000000000000000000000000000000000000000000000000000000000000000000000100000002000000030000000400000000000000";
-const LOAD_IDX = [1,2,11,19];
-const MIN_G = 3000;      // la macchina sta a 3 kg a riposo
-const LICENSE_MAX_KG = 50; // limite della licenza di questa macchina
+const NUS="6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+const U16=h=>`0000${h}-0000-1000-8000-00805f9b34fb`;
+const CH={ init:U16("0007"), cfg:U16("ff03"), run:U16("ff07"), status:U16("ff0c"), tele:U16("ff0d"), resp:U16("0002") };
+const CFG_TEMPLATE="00000000881300008813000000000000000000000000000000000000010000000000000000000000000000008813000000000000000000000000000000000000000000000000000000000000881300000000000000000000000000000000000000000000000000000000000000000000a861000000000000000000000000000000000000000000000000000000000000000000000100000002000000030000000400000000000000";
+const LICENSE_MAX_KG=50;
 
 class BleDriver {
-  constructor(log){ this.name="Bluetooth"; this.log=log; this.device=null; this.c={}; this.allChars=[];
-    this.cmd={L:0,R:0}; this.meas={L:0,R:0}; this.q=Promise.resolve(); this.lastSent=null; this.lastT=0; this.active=false; this.seq=null; }
-  get connected(){ return !!(this.device && this.device.gatt && this.device.gatt.connected); }
-  enqueue(label,fn){ this.q=this.q.then(fn).catch(e=>this.log(`✖ ${label}: ${e.message}`)); return this.q; }
-  async write(key,bytes,label){
-    const c=this.c[key]; if(!c) throw new Error("caratteristica "+key+" mancante");
-    await c.writeValueWithResponse(bytes);
-    if(label) this.log("▶ "+label);
-  }
+  constructor(){ this.name="Bluetooth"; this.device=null; this.c={}; this.allChars=[];
+    this.cmd={L:0,R:0}; this.meas={L:0,R:0}; this.q=Promise.resolve(); this.lastSent=null; this.lastT=0; this.active=false;
+    this.override=null; this.seq=null; }
+  get connected(){ return !!(this.device&&this.device.gatt&&this.device.gatt.connected); }
+  opt(k){ if(this.override&&k in this.override) return this.override[k]; return $(k==="live"?"bleLive":k==="split"?"bleSplit":"bleSwap").checked; }
+  enqueue(label,fn){ this.q=this.q.then(fn).catch(e=>log(`✖ ${label}: ${e.message}`)); return this.q; }
+  async write(key,bytes,label){ const c=this.c[key]; if(!c) throw new Error("caratteristica "+key+" mancante"); await c.writeValueWithResponse(bytes); if(label) log("▶ "+label); }
   async connect(){
-    if(!navigator.bluetooth) throw new Error("Web Bluetooth non disponibile su questo browser.");
-    this.device = await navigator.bluetooth.requestDevice({filters:[{namePrefix:"SINTESI"}], optionalServices:[NUS]});
-    this.log(`Dispositivo: ${this.device.name}`);
-    this.device.addEventListener("gattserverdisconnected",()=>{ this.log("⚠ Disconnesso dalla macchina."); this.active=false; onDriverChange(); if(S.running) emergencyStop(); });
-    const server = await this.device.gatt.connect();
-    const svc = await server.getPrimaryService(NUS);
-    this.allChars = await svc.getCharacteristics();
-    for(const [k,u] of Object.entries(CH)){ this.c[k]=this.allChars.find(x=>x.uuid===u); if(!this.c[k]) this.log("⚠ manca "+k+" ("+u+")"); }
+    if(!navigator.bluetooth) throw new Error("Bluetooth web non disponibile: usa Chrome su Android o l'app Bluefy su iPad/iPhone.");
+    this.device=await navigator.bluetooth.requestDevice({filters:[{namePrefix:"SINTESI"}],optionalServices:[NUS]});
+    log("Dispositivo: "+this.device.name);
+    this.device.addEventListener("gattserverdisconnected",()=>{ log("⚠ Disconnesso dalla macchina."); this.active=false; onDriverChange(); if(S.running) emergencyStop(); });
+    const server=await this.device.gatt.connect();
+    const svc=await server.getPrimaryService(NUS);
+    this.allChars=await svc.getCharacteristics();
+    for(const [k,u] of Object.entries(CH)){ this.c[k]=this.allChars.find(x=>x.uuid===u); if(!this.c[k]) log("⚠ manca "+k); }
     const sub=async(k,fn)=>{ if(!this.c[k]) return; await this.c[k].startNotifications(); this.c[k].addEventListener("characteristicvaluechanged",e=>fn(e.target.value)); };
-    await sub("tele",dv=>{ if(dv.byteLength>=16){ this.meas.L=dv.getInt32(8,true)/1000; this.meas.R=dv.getInt32(12,true)/1000; } });
+    await sub("tele",dv=>{ if(dv.byteLength>=16){ const a=dv.getInt32(8,true)/1000, b=dv.getInt32(12,true)/1000; if(this.opt("swap")){this.meas.L=b;this.meas.R=a;} else {this.meas.L=a;this.meas.R=b;} } });
     await sub("status",dv=>this.onStatus(new TextDecoder().decode(dv)));
-    await sub("resp",dv=>this.log("◀ "+new TextDecoder().decode(dv)));
+    await sub("resp",dv=>log("◀ "+new TextDecoder().decode(dv)));
     await this.write("init",new TextEncoder().encode('{"cmd":0,"comVersion":3,"outputPeriod":80}'),"avvio comunicazione");
-    this.log("✔ Pronto. Carico max consentito: "+Math.min(+$("maxKg").value,LICENSE_MAX_KG)+" kg");
+    log("✔ Collegato e pronto.");
     return this.allChars;
   }
   onStatus(txt){
     try{ const j=JSON.parse(txt); this.seq=j.OUT_APP_SEQ;
-      $("mState").textContent = j.OUT_APP_SEQ===4?"in corso":j.OUT_APP_SEQ===3?"ferma":String(j.OUT_APP_SEQ);
-      $("mAlarm").textContent = j.OUT_APP_ALARM?("⚠ "+j.OUT_APP_ALARM):"nessuno";
-      if(j.OUT_APP_ALARM && S.running){ this.log("⚠ Allarme macchina "+j.OUT_APP_ALARM+": STOP"); emergencyStop(); }
+      $("mState").textContent=j.OUT_APP_SEQ===4?"in corso":j.OUT_APP_SEQ===3?"ferma":String(j.OUT_APP_SEQ);
+      $("mAlarm").textContent=j.OUT_APP_ALARM?("⚠ "+j.OUT_APP_ALARM):"nessuno";
+      if(j.OUT_APP_ALARM&&S.running){ log("⚠ Allarme macchina "+j.OUT_APP_ALARM+": STOP"); emergencyStop(); }
     }catch(e){}
   }
-  grams(kg){ const max=Math.min(+$("maxKg").value,LICENSE_MAX_KG); kg=Math.max(0,Math.min(max,kg)); return Math.max(MIN_G, Math.round(kg*10)*100); }
+  grams(kg){ const max=Math.min(+$("maxKg").value,LICENSE_MAX_KG); kg=clamp(kg,0,max); return Math.max(Math.round(+$("minKg").value*1000), Math.round(kg*10)*100); }
   buildCfg(L,R){
-    const hex=CFG_TEMPLATE, b=new Uint8Array(hex.length/2);
-    for(let i=0;i<b.length;i++) b[i]=parseInt(hex.substr(i*2,2),16);
+    if(this.opt("swap")) [L,R]=[R,L];
+    const b=new Uint8Array(CFG_TEMPLATE.length/2);
+    for(let i=0;i<b.length;i++) b[i]=parseInt(CFG_TEMPLATE.substr(i*2,2),16);
     const dv=new DataView(b.buffer), gL=this.grams(L), gR=this.grams(R);
-    if($("bleSplit").checked){ dv.setInt32(4,gL,true); dv.setInt32(8,gR,true); dv.setInt32(44,gL,true); dv.setInt32(76,gR,true); }
-    else { const g=Math.max(gL,gR); LOAD_IDX.forEach(i=>dv.setInt32(i*4,g,true)); }
+    if(this.opt("split")){ dv.setInt32(4,gL,true); dv.setInt32(8,gR,true); dv.setInt32(44,gL,true); dv.setInt32(76,gR,true); }
+    else { const g=Math.max(gL,gR); [1,2,11,19].forEach(i=>dv.setInt32(i*4,g,true)); }
     return {b,gL,gR};
   }
   sendCfg(L,R,why){
-    const {b,gL,gR}=this.buildCfg(L,R), key=gL+"/"+gR;
+    const {b,gL,gR}=this.buildCfg(L,R), key=this.opt("split")?gL+"/"+gR:String(Math.max(gL,gR));
     if(key===this.lastSent) return;
     this.lastSent=key; this.lastT=performance.now();
-    const txt=$("bleSplit").checked?`${(gL/1000).toFixed(1)} / ${(gR/1000).toFixed(1)} kg`:`${(Math.max(gL,gR)/1000).toFixed(1)} kg`;
+    const txt=this.opt("split")?`${(gL/1000).toFixed(1)} / ${(gR/1000).toFixed(1)} kg`:`${(Math.max(gL,gR)/1000).toFixed(1)} kg`;
     this.enqueue("carico",()=>this.write("cfg",b,`carico ${txt}${why?" ("+why+")":""}`));
   }
-  begin(L,R){ // imposta carico iniziale e avvia
-    if(!this.connected) return;
-    this.lastSent=null; this.sendCfg(L,R,"iniziale");
-    this.enqueue("avvio",()=>this.write("run",new Uint8Array([3,0,0,0]),"AVVIA"));
-    this.active=true;
-  }
-  setForce(L,R){
-    this.cmd.L=L; this.cmd.R=R;
-    if(!this.active || !$("bleLive").checked) return;
-    if(performance.now()-this.lastT<300) return; // max ~3 aggiornamenti al secondo
-    this.sendCfg(L,R);
-  }
+  begin(L,R){ if(!this.connected) return; this.lastSent=null; this.sendCfg(L,R,"iniziale");
+    this.enqueue("avvio",()=>this.write("run",new Uint8Array([3,0,0,0]),"AVVIA")); this.active=true; }
+  setForce(L,R){ this.cmd.L=L; this.cmd.R=R;
+    if(!this.active||!this.opt("live")) return;
+    if(performance.now()-this.lastT<300) return;
+    this.sendCfg(L,R); }
   stop(){
     if(!this.connected) return;
-    this.active=false;
-    // FERMA scavalca la coda: va inviato subito
-    this.q=Promise.resolve();
-    (this.c.run? this.c.run.writeValueWithResponse(new Uint8Array([4,0,0,0])) : Promise.reject(new Error("no run")))
-      .then(()=>this.log("■ FERMA")).catch(e=>this.log("✖ FERMA non inviato: "+e.message+" → usa il pulsante rosso!"));
-    this.lastSent=null;
+    this.active=false; this.q=Promise.resolve(); this.lastSent=null;
+    (this.c.run?this.c.run.writeValueWithResponse(new Uint8Array([4,0,0,0])):Promise.reject(new Error("manca run")))
+      .then(()=>log("■ FERMA")).catch(e=>log("✖ FERMA non inviato: "+e.message+" → usa il pulsante rosso!"));
   }
   async writeRaw(idx,bytes){ const c=this.allChars[idx]; if(!c) throw new Error("Caratteristica non selezionata");
-    await c.writeValueWithResponse(bytes); this.log(`▶ grezzo ${c.uuid.slice(4,8)}: ${[...bytes].map(x=>x.toString(16).padStart(2,"0")).join(" ")}`); }
+    await c.writeValueWithResponse(bytes); log(`▶ grezzo ${c.uuid.slice(4,8)}: ${[...bytes].map(x=>x.toString(16).padStart(2,"0")).join(" ")}`); }
   disconnect(){ if(this.connected){ this.stop(); setTimeout(()=>this.device.gatt.disconnect(),400); } }
   tick(){}
-  read(){ return this.active? this.meas : {L:this.meas.L,R:this.meas.R}; }
+  read(){ return this.meas; }
 }
-function toHex(dv){ const a=[]; for(let i=0;i<dv.byteLength;i++) a.push(dv.getUint8(i).toString(16).padStart(2,"0")); return a.join(" "); }
 
 /* =========================================================
-   STATO
+   STATO E PROGRAMMI
    ========================================================= */
-const $ = id => document.getElementById(id);
-const logLines=[];
-function log(msg){ const t=new Date().toLocaleTimeString(); logLines.push(`[${t}] ${msg}`); if(logLines.length>500) logLines.shift(); $("log").textContent=logLines.join("\n"); $("log").scrollTop=1e9; }
+const sim=new SimDriver(), ble=new BleDriver();
+let driver=sim;
+const S={ running:false, mode:null, t0:0, elapsed:0, target:{L:0,R:0}, cmd:{L:0,R:0}, program:null,
+  stats:null, trace:[], samples:[], onFinish:null };
+function newStats(){ return {peak:0,peakL:0,peakR:0,sum:0,n:0,tut:0,imp:0}; }
+S.stats=newStats();
 
-const sim = new SimDriver();
-const ble = new BleDriver(log);
-let driver = sim;
-
-const S = {
-  running:false, mode:null, t0:0, elapsed:0,
-  target:{L:0,R:0}, cmd:{L:0,R:0},
-  program:null, seg:null, lap:0,
-  stats:{peak:0,sum:0,n:0,tut:0,imp:0},
-  samples:[]
-};
-
-/* =========================================================
-   PROGRAMMI (restituiscono il target in base al tempo)
-   ========================================================= */
-function parseSegments(txt){
-  const out=[];
-  txt.split(/\n/).forEach((line,i)=>{
-    const l=line.trim().toLowerCase(); if(!l||l.startsWith("#")) return;
-    const p=l.split(/\s+/);
-    const tipo=p[0], dur=parseFloat(p[1]), g=parseFloat(p[2]||"0");
-    if(!SEG_COLORS[tipo]||!(dur>0)||isNaN(g)) throw new Error(`Riga ${i+1} non valida: "${line.trim()}"`);
-    out.push({tipo,dur,g:Math.max(0,Math.min(g,5))});
-  });
-  if(!out.length) throw new Error("Nessun tratto.");
-  return out;
-}
-function smoothstep(x){ x=Math.max(0,Math.min(1,x)); return x*x*(3-2*x); }
-
-function makeCircuit(segs, laps, kgPerG, invert){
-  const lapLen = segs.reduce((a,s)=>a+s.dur,0);
-  return {
-    duration: lapLen*laps, lapLen, laps, segs,
-    at(t){
-      const lap=Math.min(laps-1,Math.floor(t/lapLen)); let tl=t-lap*lapLen;
-      let i=0; while(i<segs.length-1 && tl>=segs[i].dur){ tl-=segs[i].dur; i++; }
-      const s=segs[i];
-      // dolce in entrata/uscita dal tratto (0.4 s)
-      const edge=Math.min(0.4,s.dur/3);
-      const env=smoothstep(tl/edge)*smoothstep((s.dur-tl)/edge);
-      const kg=s.g*kgPerG*env;
-      let L=0,R=0;
-      if(s.tipo==="dx"){ if(invert) R=kg; else L=kg; }
-      else if(s.tipo==="sx"){ if(invert) L=kg; else R=kg; }
-      else if(s.tipo==="frenata"){ L=kg; R=kg; }
-      else if(s.tipo==="cordolo"){ const v=kg*(0.5+0.5*Math.sin(t*2*Math.PI*8)); L=v; R=v; }
-      return {L,R,info:{seg:i,lap:lap+1,name:s.tipo,g:s.tipo==="dritto"?0:s.g*env,tl}};
-    }
-  };
+function makeCircuit(lap,laps){
+  return { duration:lap.len*laps, lap, laps,
+    at(t){ const lapN=Math.min(laps-1,Math.floor(t/lap.len)), tl=t-lapN*lap.len, g=lap.at(tl), f=forcesFromG(g,t);
+      return {L:f.L,R:f.R,info:{lap:lapN+1,tl,g}}; } };
 }
 function makeConstant(){
   const dur=parseFloat($("cDur").value)||0;
-  return { duration: dur>0?dur:Infinity, at(){ return {L:parseFloat($("cL").value),R:parseFloat($("cR").value),info:null}; } };
+  return { duration:dur>0?dur:Infinity, at(){ return {L:+$("cL").value,R:+$("cR").value,info:null}; } };
 }
 function makeIso(){
   const kg=+$("iKg").value, reps=Math.max(1,+$("iReps").value|0), work=Math.max(1,+$("iWork").value), rest=Math.max(0,+$("iRest").value);
-  const side=$("iSide").value, ramp=Math.max(0,+$("iRamp").value);
-  const cycle=work+rest;
-  return {
-    duration: reps*cycle - rest,
-    at(t){
-      const k=Math.floor(t/cycle), tc=t-k*cycle;
-      let f=0, phase="recupero";
-      if(tc<work){ phase="lavoro"; const r=ramp>0?Math.min(smoothstep(tc/ramp),smoothstep((work-tc)/ramp)):1; f=kg*r; }
-      let L=0,R=0;
-      if(side==="both"){L=f;R=f;} else if(side==="L") L=f; else if(side==="R") R=f;
-      else { if(k%2===0) L=f; else R=f; }
-      return {L,R,info:{iso:true,rep:k+1,reps,phase,left:Math.max(0,(phase==="lavoro"?work:cycle)-tc)}};
-    }
-  };
+  const side=$("iSide").value, ramp=Math.max(0,+$("iRamp").value), cycle=work+rest;
+  return { duration:reps*cycle-rest, at(t){
+    const k=Math.floor(t/cycle), tc=t-k*cycle; let f=0, phase="recupero";
+    if(tc<work){ phase="lavoro"; f=kg*(ramp>0?Math.min(smoothstep(tc/ramp),smoothstep((work-tc)/ramp)):1); }
+    let L=0,R=0;
+    if(side==="both"){L=f;R=f;} else if(side==="L") L=f; else if(side==="R") R=f; else { if(k%2===0) L=f; else R=f; }
+    return {L,R,info:{iso:true,rep:k+1,reps,phase,left:Math.max(0,(phase==="lavoro"?work:cycle)-tc)}};
+  }};
 }
 
 /* =========================================================
-   CICLO PRINCIPALE
+   CICLO PRINCIPALE (20 Hz)
    ========================================================= */
 let last=performance.now();
 setInterval(()=>{
-  const now=performance.now(); const dt=Math.min(0.2,(now-last)/1000); last=now;
-  const maxKg=+$("maxKg").value, rate=+$("ramp").value;
-
+  const now=performance.now(), dt=Math.min(0.2,(now-last)/1000); last=now;
+  const maxKg=Math.min(+$("maxKg").value,LICENSE_MAX_KG), rate=+$("ramp").value;
   let tgt={L:0,R:0}, info=null;
-  if(S.running && S.program){
+  if(S.running&&S.program){
     S.elapsed=(now-S.t0)/1000;
-    if(S.elapsed>=S.program.duration){ finish("completato"); }
+    if(S.elapsed>=S.program.duration) finish("completato");
     else { const r=S.program.at(S.elapsed); tgt={L:r.L,R:r.R}; info=r.info; }
   }
-  // SICUREZZA 1: limite assoluto
-  tgt.L=Math.max(0,Math.min(maxKg,tgt.L||0)); tgt.R=Math.max(0,Math.min(maxKg,tgt.R||0));
+  tgt.L=clamp(tgt.L||0,0,maxKg); tgt.R=clamp(tgt.R||0,0,maxKg);
   S.target=tgt;
-  // SICUREZZA 2: limite di velocità di variazione
-  for(const s of ["L","R"]){
-    const d=tgt[s]-S.cmd[s], m=rate*dt;
-    S.cmd[s] += Math.max(-m,Math.min(m,d));
-  }
+  for(const s of ["L","R"]){ const d=tgt[s]-S.cmd[s], m=rate*dt; S.cmd[s]+=clamp(d,-m,m); }
   driver.setForce(S.cmd.L,S.cmd.R);
   sim.tick(dt);
   const act=driver.read();
-
-  // statistiche
   if(S.running){
-    const tot=act.L+act.R, pk=Math.max(act.L,act.R);
-    if(pk>S.stats.peak) S.stats.peak=pk;
-    if(tot>0.3){ S.stats.tut+=dt; S.stats.sum+=pk; S.stats.n++; }
-    S.stats.imp+=tot*dt;
+    const pk=Math.max(act.L,act.R);
+    S.stats.peak=Math.max(S.stats.peak,pk); S.stats.peakL=Math.max(S.stats.peakL,act.L); S.stats.peakR=Math.max(S.stats.peakR,act.R);
+    if(act.L+act.R>0.3){ S.stats.tut+=dt; S.stats.sum+=pk; S.stats.n++; }
+    S.stats.imp+=(act.L+act.R)*dt;
+    S.trace.push({t:S.elapsed,L:act.L,R:act.R,tL:tgt.L,tR:tgt.R});
   }
-  // campioni grafico (ultimi 20 s)
   S.samples.push({t:now/1000,tl:tgt.L,tr:tgt.R,al:act.L,ar:act.R});
-  while(S.samples.length && S.samples[0].t < now/1000-20) S.samples.shift();
-
+  while(S.samples.length&&S.samples[0].t<now/1000-20) S.samples.shift();
   render(act,info,maxKg);
-},TICK_MS);
+},50);
 
 /* =========================================================
    AVVIO / STOP
    ========================================================= */
-let cdTimer=null;
-function start(mode, program){
-  if(S.running) return;
-  S.mode=mode; S.program=program;
-  S.stats={peak:0,sum:0,n:0,tut:0,imp:0};
+let cdTimer=null, wake=null;
+function start(mode,program,opts={}){
+  if(S.running||cdTimer) return false;
+  S.mode=mode; S.program=program; S.stats=newStats(); S.trace=[]; S.onFinish=opts.onFinish||null;
+  ble.override=opts.override||null;
   setRunButtons(true);
   const secs=Math.max(0,+$("cd").value|0);
-  if(secs===0){ go(); return; }
+  const go=()=>{
+    S.running=true; S.t0=performance.now(); S.elapsed=0; $("stateTxt").textContent="in corso";
+    const r=program.at(0.3); driver.begin(r.L,r.R);
+    if(driver===ble && !ble.opt("live") && mode.startsWith("Circuito")) log("ℹ Circuito senza 'aggiorna durante l'esercizio': il carico resta quello iniziale.");
+    if($("wakeLock").checked && navigator.wakeLock){ navigator.wakeLock.request("screen").then(w=>wake=w).catch(()=>{}); }
+  };
+  if(secs===0){ go(); return true; }
   let n=secs; const el=$("countdown"); el.textContent=n; el.classList.remove("hidden");
   cdTimer=setInterval(()=>{ n--; if(n<=0){ clearInterval(cdTimer); cdTimer=null; el.classList.add("hidden"); go(); } else el.textContent=n; },1000);
-  function go(){ S.running=true; S.t0=performance.now(); S.elapsed=0; $("stateTxt").textContent="in corso";
-    if(driver===ble){ const r=S.program.at(0.5); const init=(S.mode==="Forza costante")?r:{L:Math.max(r.L,0),R:Math.max(r.R,0)}; ble.begin(init.L,init.R); } }
+  return true;
 }
 function emergencyStop(){
   if(cdTimer){ clearInterval(cdTimer); cdTimer=null; $("countdown").classList.add("hidden"); }
-  const wasRunning=S.running;
-  S.cmd={L:0,R:0}; S.target={L:0,R:0};      // zero immediato, nessuna rampa
+  S.cmd={L:0,R:0}; S.target={L:0,R:0};
   driver.stop(); sim.stop();
-  if(wasRunning) finish("fermato con STOP"); else { S.program=null; setRunButtons(false); $("stateTxt").textContent="fermo"; }
+  if(S.running) finish("fermato con STOP",true); else { S.program=null; setRunButtons(false); $("stateTxt").textContent="fermo"; }
 }
-function finish(why){
-  if(driver===ble && ble.active) ble.stop();
-  if(S.running && S.elapsed>2) saveHistory();
-  S.running=false; S.program=null;
+function finish(why,aborted){
+  if(driver.active) driver.stop(); sim.stop();
+  const wasRunning=S.running;
+  if(wasRunning && S.elapsed>2 && !S.mode.startsWith("Test")) saveHistory();
+  S.running=false; S.program=null; ble.override=null;
   $("stateTxt").textContent=why; setRunButtons(false);
+  if(wake){ wake.release().catch(()=>{}); wake=null; }
+  if(wasRunning && S.onFinish){ const f=S.onFinish; S.onFinish=null; f(!!aborted); }
 }
-function setRunButtons(running){ ["goCircuit","goConst","goIso"].forEach(id=>$(id).disabled=running); }
+function setRunButtons(running){ ["goCircuit","goConst","goIso"].forEach(id=>$(id).disabled=running);
+  document.querySelectorAll("[data-test]").forEach(b=>b.disabled=running); }
 
 $("btnStop").addEventListener("click",emergencyStop);
 document.addEventListener("keydown",e=>{ if(e.code==="Space"||e.key==="Escape"){ e.preventDefault(); emergencyStop(); }});
-document.addEventListener("visibilitychange",()=>{ if(document.hidden && $("autoStopHidden").checked) emergencyStop(); });
+document.addEventListener("visibilitychange",()=>{ if(document.hidden&&$("autoStopHidden").checked) emergencyStop(); });
 
+let SRC="tratti";
 $("goCircuit").addEventListener("click",()=>{
   try{
-    const segs=parseSegments($("segText").value);
-    const prog=makeCircuit(segs, Math.max(1,+$("laps").value|0), +$("kgPerG").value, $("invert").checked);
-    buildSegBar(segs); $("lapTot").textContent=prog.laps;
-    $("segWrap").classList.remove("hidden");
-    start("Circuito: "+$("preset").value, prog);
+    let lap, segs=null;
+    if(SRC==="csv"){ lap=buildCsvLap().lap; }
+    else { segs=parseSegments($("segText").value); lap=lapFromSegments(segs); }
+    const prog=makeCircuit(lap,Math.max(1,+$("laps").value|0));
+    buildSegBar(lap); $("segWrap").classList.remove("hidden");
+    start("Circuito: "+(SRC==="csv"?"telemetria":$("preset").value),prog);
   }catch(e){ $("stateTxt").textContent="errore: "+e.message; }
 });
 $("goConst").addEventListener("click",()=>{ $("segWrap").classList.add("hidden"); start("Forza costante",makeConstant()); });
@@ -575,45 +742,177 @@ $("goIso").addEventListener("click",()=>{ $("segWrap").classList.add("hidden"); 
 /* =========================================================
    RENDER
    ========================================================= */
-const cv=$("chart"), ctx=cv.getContext("2d");
+const cv=$("chart"), ctx=cv.getContext("2d"), gm=$("gmeter"), gctx=gm.getContext("2d");
+const LAST_G={lat:0,lon:0};
+function fitCanvas(c,cx){ const dpr=window.devicePixelRatio||1, w=c.clientWidth, h=c.clientHeight;
+  if(c.width!==Math.round(w*dpr)||c.height!==Math.round(h*dpr)){ c.width=Math.round(w*dpr); c.height=Math.round(h*dpr); }
+  cx.setTransform(dpr,0,0,dpr,0,0); cx.clearRect(0,0,w,h); return [w,h]; }
 function render(act,info,maxKg){
   $("gL").textContent=act.L.toFixed(1); $("gR").textContent=act.R.toFixed(1);
   $("tL").textContent=S.target.L.toFixed(1); $("tR").textContent=S.target.R.toFixed(1);
   $("bL").style.width=Math.min(100,act.L/maxKg*100)+"%"; $("bR").style.width=Math.min(100,act.R/maxKg*100)+"%";
-  const e=Math.floor(S.elapsed); $("timeTxt").textContent=S.running?`${Math.floor(e/60)}:${String(e%60).padStart(2,"0")}`:$("timeTxt").textContent;
+  if(S.running){ const e=Math.floor(S.elapsed); $("timeTxt").textContent=`${Math.floor(e/60)}:${String(e%60).padStart(2,"0")}`; }
   $("sPeak").textContent=S.stats.peak.toFixed(1);
   $("sAvg").textContent=(S.stats.n?S.stats.sum/S.stats.n:0).toFixed(1);
   $("sTut").textContent=Math.round(S.stats.tut);
   $("sImp").textContent=Math.round(S.stats.imp);
-  if(info && info.name!==undefined){
-    $("segName").textContent=info.name; $("lapNow").textContent=info.lap; $("gNow").textContent=info.g.toFixed(1);
-    const p=S.program, tLap=S.elapsed-(info.lap-1)*p.lapLen;
-    $("segCursor").style.left=`calc(${Math.min(100,tLap/p.lapLen*100)}% - 1px)`;
-  } else if(info && info.iso){
-    $("stateTxt").textContent=`${info.phase} · rip ${info.rep}/${info.reps} · ${info.left.toFixed(0)} s`;
+  if(info&&info.g){
+    const g=info.g; LAST_G.lat=g.lat; LAST_G.lon=g.lon;
+    $("segName").textContent=g.label; $("lapNow").textContent=`${info.lap}/${S.program.laps}`;
+    $("gLat").textContent=Math.abs(g.lat).toFixed(1)+(g.lat>0.05?" →":g.lat<-0.05?" ←":""); $("gLon").textContent=g.lon.toFixed(1);
+    const c=$("segCursor"); if(c) c.style.left=`calc(${Math.min(100,info.tl/S.program.lap.len*100)}% - 1px)`;
+  } else {
+    LAST_G.lat*=0.9; LAST_G.lon*=0.9;
+    if(info&&info.iso) $("stateTxt").textContent=`${info.phase} · rip ${info.rep}/${info.reps} · ${info.left.toFixed(0)} s`;
   }
-  drawChart(maxKg);
+  drawChart(maxKg); drawG();
 }
 function drawChart(maxKg){
-  const dpr=window.devicePixelRatio||1, w=cv.clientWidth, h=cv.clientHeight;
-  if(cv.width!==w*dpr||cv.height!==h*dpr){ cv.width=w*dpr; cv.height=h*dpr; }
-  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
-  const pad=26, now=performance.now()/1000, top=Math.max(2,maxKg);
+  const [w,h]=fitCanvas(cv,ctx), pad=26, now=performance.now()/1000, top=Math.max(4,maxKg);
   ctx.strokeStyle="#2a2f38"; ctx.fillStyle="#8b93a1"; ctx.font="10px sans-serif"; ctx.lineWidth=1;
   for(let i=0;i<=4;i++){ const y=h-pad/2-(h-pad)*(i/4); ctx.beginPath(); ctx.moveTo(pad,y); ctx.lineTo(w,y); ctx.stroke(); ctx.fillText((top*i/4).toFixed(0),4,y+3); }
   const X=t=>pad+(w-pad)*(1-(now-t)/20), Y=v=>h-pad/2-(h-pad)*(v/top);
-  const line=(key,color,dash)=>{ ctx.beginPath(); ctx.setLineDash(dash?[4,4]:[]); ctx.strokeStyle=color; ctx.lineWidth=dash?1.5:2.5;
-    S.samples.forEach((s,i)=>{ const x=X(s.t),y=Y(s[key]); i?ctx.lineTo(x,y):ctx.moveTo(x,y); }); ctx.stroke(); };
-  line("tl","#4ea1ff88",true); line("tr","#ff8a3d88",true);
-  line("al","#4ea1ff",false); line("ar","#ff8a3d",false);
+  const line=(k,col,dash)=>{ ctx.beginPath(); ctx.setLineDash(dash?[4,4]:[]); ctx.strokeStyle=col; ctx.lineWidth=dash?1.5:2.5;
+    S.samples.forEach((s,i)=>{ const x=X(s.t),y=Y(s[k]); i?ctx.lineTo(x,y):ctx.moveTo(x,y); }); ctx.stroke(); };
+  line("tl","#4ea1ff88",true); line("tr","#ff8a3d88",true); line("al","#4ea1ff",false); line("ar","#ff8a3d",false);
   ctx.setLineDash([]);
 }
-function buildSegBar(segs){
-  const tot=segs.reduce((a,s)=>a+s.dur,0), bar=$("segbar"); bar.innerHTML="";
-  segs.forEach(s=>{ const d=document.createElement("div"); d.style.width=(s.dur/tot*100)+"%"; d.style.background=SEG_COLORS[s.tipo];
-    d.textContent=s.tipo==="dritto"?"":s.tipo; bar.appendChild(d); });
+function drawG(){
+  const [w,h]=fitCanvas(gm,gctx), cx=w/2, cy=h/2, r=Math.min(w,h)/2-6, sc=r/3;
+  gctx.strokeStyle="#2a2f38"; gctx.lineWidth=1;
+  [1,2,3].forEach(i=>{ gctx.beginPath(); gctx.arc(cx,cy,i*sc,0,Math.PI*2); gctx.stroke(); });
+  gctx.beginPath(); gctx.moveTo(cx-r,cy); gctx.lineTo(cx+r,cy); gctx.moveTo(cx,cy-r); gctx.lineTo(cx,cy+r); gctx.stroke();
+  gctx.fillStyle="#8b93a1"; gctx.font="9px sans-serif"; gctx.fillText("1G",cx+sc-6,cy-3); gctx.fillText("2G",cx+2*sc-6,cy-3);
+  // il punto mostra dove viene spinta la testa: curva a destra -> testa a sinistra; frenata -> testa in avanti (su)
+  const x=cx-clamp(LAST_G.lat,-3,3)*sc, y=cy-clamp(LAST_G.lon,0,3)*sc;
+  gctx.fillStyle=LAST_G.lat>0.05?"#4ea1ff":LAST_G.lat<-0.05?"#ff8a3d":"#e9ecf1";
+  gctx.beginPath(); gctx.arc(x,y,6,0,Math.PI*2); gctx.fill();
+}
+function buildSegBar(lap){
+  const bar=$("segbar"); bar.innerHTML="";
+  if(lap.segs){
+    lap.segs.forEach(s=>{ const d=document.createElement("div"); d.style.width=(s.dur/lap.len*100)+"%"; d.style.background=SEG_COLORS[s.tipo];
+      d.textContent=s.tipo==="dritto"?"":s.tipo; bar.appendChild(d); });
+  } else { // telemetria: 120 fette colorate per G laterale
+    const n=120; for(let i=0;i<n;i++){ const g=lap.at(lap.len*(i+0.5)/n); const d=document.createElement("div"); d.style.width=(100/n)+"%";
+      const a=clamp(Math.abs(g.lat)/2.5,0,1); d.style.background= Math.abs(g.lat)<0.4?"#c9ced6": (g.lat>0?`rgba(255,138,61,${0.35+0.65*a})`:`rgba(78,161,255,${0.35+0.65*a})`); bar.appendChild(d); }
+  }
   const c=document.createElement("div"); c.className="cursor"; c.id="segCursor"; bar.appendChild(c);
 }
+
+/* =========================================================
+   TEST MACCHINA GUIDATO
+   ========================================================= */
+const TEST={};
+function stepUI(n,state,res){ const el=$("T"+n), st=el.querySelector(".st");
+  st.className="st "+(state||""); st.textContent={pass:"ok",fail:"no",run:"in corso","":"da fare"}[state||""]||state;
+  if(res!==undefined) el.querySelector(".res").innerHTML=res; }
+function avgWindow(a,b,side){ const v=S.trace.filter(p=>p.t>=a&&p.t<b).map(p=>p[side]); return v.length?v.reduce((x,y)=>x+y,0)/v.length:0; }
+function lastTrace(){ return S.trace.slice(); }
+
+document.querySelectorAll("[data-test]").forEach(btn=>btn.addEventListener("click",async()=>{
+  const n=+btn.dataset.test;
+  if(n===1){
+    stepUI(1,"run");
+    try{ if(!ble.connected){ await ble.connect(); fillCharSelect(); } onDriverChange();
+      TEST.t1="collegato ("+(ble.device&&ble.device.name)+")"; stepUI(1,"pass","✔ Collegato. Stato macchina: <b>"+$("mState").textContent+"</b>");
+    }catch(e){ TEST.t1="errore: "+e.message; stepUI(1,"fail","✖ "+e.message); }
+    return;
+  }
+  if(driver!==ble && !confirm_sim(n)) return;
+  if(n===2){
+    stepUI(2,"run","");
+    start("Test 2: costante 5 kg",{duration:15,at:()=>({L:5,R:5,info:null})},{override:{live:false,split:false,swap:false},
+      onFinish:(ab)=>{ const tr=S.trace; const avgL=avgWindow(5,14,"L"), avgR=avgWindow(5,14,"R");
+        TEST.t2={avgL:+avgL.toFixed(2),avgR:+avgR.toFixed(2),peakL:+S.stats.peakL.toFixed(2),peakR:+S.stats.peakR.toFixed(2),aborted:ab};
+        const ok=!ab&&(avgL>4||avgR>4);
+        stepUI(2,ok?"pass":"fail",`Misurato (5–14 s): sinistra <b>${avgL.toFixed(1)} kg</b>, destra <b>${avgR.toFixed(1)} kg</b>. ${ok?"La macchina ha applicato il carico.":"Non è arrivato a 5 kg: hai tirato i cavi?"}`); }});
+  }
+  if(n===3){
+    stepUI(3,"run","");
+    start("Test 3: 3→6→3 kg in corsa",{duration:18,at:t=>{ const k=t<6?3:t<12?6:3; return {L:k,R:k,info:null}; }},{override:{live:true,split:false,swap:false},
+      onFinish:(ab)=>{ const a1=Math.max(avgWindow(3,5.5,"L"),avgWindow(3,5.5,"R")), a2=Math.max(avgWindow(9,11.5,"L"),avgWindow(9,11.5,"R")), a3=Math.max(avgWindow(15,17.5,"L"),avgWindow(15,17.5,"R"));
+        TEST.t3={a1:+a1.toFixed(2),a2:+a2.toFixed(2),a3:+a3.toFixed(2),aborted:ab};
+        const ok=!ab&&a2>a1+1.5&&a2>a3+1.5;
+        stepUI(3,ok?"pass":"fail",`Misurato: <b>${a1.toFixed(1)} → ${a2.toFixed(1)} → ${a3.toFixed(1)} kg</b>. ${ok?"✔ La macchina accetta i cambi di carico durante l'esercizio. Ho attivato l'opzione in Bluetooth.":"Il carico non è cambiato in corsa: per ora il Circuito userà solo il carico iniziale."}`);
+        if(ok){ $("bleLive").checked=true; store.set("kart_bleLive",true); } }});
+  }
+  if(n===4){
+    stepUI(4,"run",""); $("T4ask").classList.add("hidden");
+    start("Test 4: sinistra 3 / destra 6",{duration:15,at:()=>({L:3,R:6,info:null})},{override:{live:false,split:true,swap:false},
+      onFinish:(ab)=>{ const aL=avgWindow(5,14,"L"), aR=avgWindow(5,14,"R");
+        TEST.t4={measL:+aL.toFixed(2),measR:+aR.toFixed(2),aborted:ab};
+        stepUI(4,"run",`Misurato: indice "sinistra" <b>${aL.toFixed(1)} kg</b>, indice "destra" <b>${aR.toFixed(1)} kg</b>. Quale lato hai sentito più pesante?`);
+        $("T4ask").classList.remove("hidden"); }});
+  }
+}));
+function confirm_sim(n){ log(`ℹ Prova ${n} in modalità simulatore (non collegato alla macchina).`); return true; }
+document.querySelectorAll("[data-heavy]").forEach(b=>b.addEventListener("click",()=>{
+  const h=b.dataset.heavy; TEST.t4=Object.assign(TEST.t4||{},{heavier:h}); $("T4ask").classList.add("hidden");
+  let msg;
+  if(h==="R"){ msg="✔ I lati sono giusti: carichi separati attivati."; $("bleSplit").checked=true; $("bleSwap").checked=false; }
+  else if(h==="L"){ msg="✔ I lati erano invertiti: ho attivato 'scambia sinistra/destra' e i carichi separati."; $("bleSplit").checked=true; $("bleSwap").checked=true; }
+  else { msg="I due lati erano uguali: i carichi separati non funzionano così. Restano spenti."; $("bleSplit").checked=false; }
+  ["bleSplit","bleSwap"].forEach(id=>store.set("kart_"+id,$(id).checked));
+  stepUI(4,h==="="?"fail":"pass",msg);
+}));
+$("copyResults").addEventListener("click",async()=>{
+  const txt="RISULTATI TEST SINTESI\n"+JSON.stringify({data:new Date().toISOString(),...TEST},null,1)+"\n\nREGISTRO:\n"+logLines.slice(-60).join("\n");
+  const ok=await copyText(txt);
+  $("copyResults").textContent= ok?"Copiato ✔":"Copia non riuscita: usa 'Copia registro'";
+  setTimeout(()=>$("copyResults").textContent="Copia risultati",2500);
+});
+
+/* =========================================================
+   SETUP: posizione
+   ========================================================= */
+const POS_INFO={
+  centro:{ steps:[
+    "Mettiti <b>al centro</b> tra le due colonne, guardando il muro, a 30–50 cm.",
+    "Cavo della colonna <b>sinistra</b> → anello <b>sinistro</b> del caschetto. Cavo <b>destro</b> → anello destro.",
+    "Regola l'uscita dei cavi all'<b>altezza della testa</b>, così il tiro è orizzontale.",
+    "Curva a destra: tira la colonna sinistra. Curva a sinistra: la destra. Frenata: tutte e due."],
+    pull:"both" },
+  fiancoSx:{ steps:[
+    "Mettiti <b>di fianco</b>: le colonne alla tua <b>sinistra</b>, davanti alla colonna più vicina.",
+    "Un solo cavo, all'anello <b>sinistro</b> del caschetto. Tiro puramente laterale.",
+    "L'app usa solo le <b>curve a destra</b> del giro (quelle che spingono la testa a sinistra).",
+    "Finito, girati e usa “Colonna alla tua destra”."],
+    pull:"L" },
+  fiancoDx:{ steps:[
+    "Mettiti <b>di fianco</b>: le colonne alla tua <b>destra</b>.",
+    "Un solo cavo, all'anello <b>destro</b> del caschetto.",
+    "L'app usa solo le <b>curve a sinistra</b> del giro.",
+    "Il carico di questa posizione va sulla colonna che stai usando."],
+    pull:"R" }
+};
+function diagramSVG(pos){
+  const head = pos==="centro"? {x:210,y:120} : pos==="fiancoSx"? {x:150,y:110} : {x:270,y:110};
+  const sx={x:110,y:40}, dx={x:310,y:40};
+  const cable=(p,col)=>`<line x1="${p.x}" y1="${p.y+12}" x2="${head.x}" y2="${head.y}" stroke="${col}" stroke-width="3"/>`;
+  let cables="";
+  if(pos==="centro") cables=cable(sx,"#4ea1ff")+cable(dx,"#ff8a3d");
+  if(pos==="fiancoSx") cables=cable(sx,"#4ea1ff");
+  if(pos==="fiancoDx") cables=cable(dx,"#ff8a3d");
+  const facing = pos==="centro" ? `<path d="M${head.x-8} ${head.y-16} L${head.x} ${head.y-26} L${head.x+8} ${head.y-16}" fill="none" stroke="#e9ecf1" stroke-width="2"/>`
+    : pos==="fiancoSx" ? `<path d="M${head.x+16} ${head.y-8} L${head.x+26} ${head.y} L${head.x+16} ${head.y+8}" fill="none" stroke="#e9ecf1" stroke-width="2"/>`
+    : `<path d="M${head.x-16} ${head.y-8} L${head.x-26} ${head.y} L${head.x-16} ${head.y+8}" fill="none" stroke="#e9ecf1" stroke-width="2"/>`;
+  return `<svg class="diagram" viewBox="0 0 420 190" role="img" aria-label="Vista dall'alto della posizione">
+    <rect x="20" y="14" width="380" height="14" rx="3" fill="#2a2f38"/><text x="210" y="25" fill="#8b93a1" font-size="10" text-anchor="middle">MURO · specchio</text>
+    <circle cx="${sx.x}" cy="${sx.y}" r="12" fill="#1b2a3d" stroke="#4ea1ff" stroke-width="2"/><text x="${sx.x}" y="${sx.y+4}" fill="#4ea1ff" font-size="10" text-anchor="middle" font-weight="700">SX</text>
+    <circle cx="${dx.x}" cy="${dx.y}" r="12" fill="#3a2414" stroke="#ff8a3d" stroke-width="2"/><text x="${dx.x}" y="${dx.y+4}" fill="#ff8a3d" font-size="10" text-anchor="middle" font-weight="700">DX</text>
+    ${cables}
+    <ellipse cx="${head.x}" cy="${head.y+22}" rx="30" ry="12" fill="#1e222a" stroke="#8b93a1"/>
+    <circle cx="${head.x}" cy="${head.y}" r="13" fill="#e9ecf1"/>
+    ${facing}
+    <text x="210" y="182" fill="#8b93a1" font-size="10" text-anchor="middle">vista dall'alto · la freccia indica dove guardi</text>
+  </svg>`;
+}
+function setPos(p){ POS=p; store.set("kartPos",p);
+  document.querySelectorAll("#posSeg button").forEach(b=>b.classList.toggle("on",b.dataset.pos===p));
+  $("posDiagram").innerHTML=diagramSVG(p);
+  $("posHowto").innerHTML=POS_INFO[p].steps.map(s=>`<li>${s}</li>`).join(""); }
+document.querySelectorAll("#posSeg button").forEach(b=>b.addEventListener("click",()=>setPos(b.dataset.pos)));
 
 /* =========================================================
    STORICO
@@ -621,75 +920,112 @@ function buildSegBar(segs){
 function saveHistory(){
   const h=store.get("kartHist",[]);
   h.unshift({d:new Date().toISOString(),m:S.mode,dur:Math.round(S.elapsed),pk:+S.stats.peak.toFixed(1),imp:Math.round(S.stats.imp)});
-  store.set("kartHist",h.slice(0,100)); renderHistory();
+  store.set("kartHist",h.slice(0,200)); renderHistory();
 }
 function renderHistory(){
   const h=store.get("kartHist",[]);
-  $("histBody").innerHTML = h.length? h.map(r=>`<tr><td>${new Date(r.d).toLocaleString("it-IT",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</td><td>${r.m}</td><td>${Math.floor(r.dur/60)}:${String(r.dur%60).padStart(2,"0")}</td><td>${r.pk} kg</td><td>${r.imp}</td></tr>`).join("")
-    : `<tr><td colspan="5" style="color:var(--muted)">Ancora nessuna sessione.</td></tr>`;
+  $("histBody").innerHTML=h.length?h.slice(0,50).map(r=>`<tr><td>${new Date(r.d).toLocaleString("it-IT",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</td><td>${r.m}</td><td>${Math.floor(r.dur/60)}:${String(r.dur%60).padStart(2,"0")}</td><td>${r.pk} kg</td><td>${r.imp}</td></tr>`).join("")
+    :`<tr><td colspan="5" style="color:var(--muted)">Ancora nessuna sessione.</td></tr>`;
+  drawHist(h);
+}
+function drawHist(h){
+  const c=$("histChart"), cx=c.getContext("2d"); if(!c.clientWidth) return;
+  const [w,hh]=fitCanvas(c,cx), data=h.slice(0,24).reverse();
+  if(!data.length){ cx.fillStyle="#8b93a1"; cx.font="12px sans-serif"; cx.fillText("Nessun dato",10,20); return; }
+  const max=Math.max(...data.map(d=>d.imp),1), bw=(w-20)/data.length;
+  data.forEach((d,i)=>{ const bh=(hh-24)*d.imp/max; cx.fillStyle=d.m.startsWith("Circuito")?"#3ddc84":d.m==="Isometrico"?"#ffcc33":"#4ea1ff";
+    cx.fillRect(10+i*bw+2,hh-14-bh,Math.max(2,bw-4),bh); });
+  cx.fillStyle="#8b93a1"; cx.font="10px sans-serif"; cx.fillText("● circuito  ● costante  ● isometrico",10,hh-2);
 }
 $("histClear").addEventListener("click",()=>{ store.set("kartHist",[]); renderHistory(); });
 
 /* =========================================================
-   UI: tab, slider, preset, impostazioni salvate
+   UI GENERALE
    ========================================================= */
 document.querySelectorAll("#tabs button").forEach(b=>b.addEventListener("click",()=>{
   document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("on",x===b));
   document.querySelectorAll("[data-panel]").forEach(p=>p.classList.toggle("hidden",p.dataset.panel!==b.dataset.tab));
+  if(b.dataset.tab==="storico") renderHistory();
 }));
+document.querySelectorAll("#modeSeg button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll("#modeSeg button").forEach(x=>x.classList.toggle("on",x===b));
+  document.querySelectorAll("[data-mode-panel]").forEach(p=>p.classList.toggle("hidden",p.dataset.modePanel!==b.dataset.mode));
+}));
+document.querySelectorAll("#srcSeg button").forEach(b=>b.addEventListener("click",()=>{
+  SRC=b.dataset.src;
+  document.querySelectorAll("#srcSeg button").forEach(x=>x.classList.toggle("on",x===b));
+  document.querySelectorAll("[data-src-panel]").forEach(p=>p.classList.toggle("hidden",p.dataset.srcPanel!==SRC));
+}));
+
 const presetSel=$("preset");
 Object.keys(PRESETS).forEach(k=>{ const o=document.createElement("option"); o.textContent=k; presetSel.appendChild(o); });
 const custom=document.createElement("option"); custom.textContent="Personalizzato"; presetSel.appendChild(custom);
 presetSel.addEventListener("change",()=>{ if(PRESETS[presetSel.value]) $("segText").value=PRESETS[presetSel.value]; });
 $("segText").addEventListener("input",()=>{ presetSel.value="Personalizzato"; store.set("kartCustom",$("segText").value); });
+const savedCustom=store.get("kartCustom",null);
+if(savedCustom){ presetSel.value="Personalizzato"; $("segText").value=savedCustom; } else $("segText").value=PRESETS[presetSel.value];
+
+// CSV
+$("csvFile").addEventListener("change",async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  try{
+    CSV=parseCSV(await f.text());
+    const opts=CSV.headers.map((h,i)=>`<option value="${i}">${h||("colonna "+(i+1))}</option>`).join("");
+    $("colT").innerHTML=opts; $("colLat").innerHTML=opts; $("colLon").innerHTML=`<option value="-1">(nessuna)</option>`+opts;
+    const gT=guessCol(CSV.headers,/^(time|tempo|t|seconds|sec|timestamp)\b|time/i), gL=guessCol(CSV.headers,/lat/i), gO=guessCol(CSV.headers,/lon|inline|long/i);
+    $("colT").value=gT>=0?gT:0; $("colLat").value=gL>=0?gL:1; $("colLon").value=gO>=0?gO:-1;
+    $("csvCols").classList.remove("hidden"); updateCsvInfo();
+  }catch(err){ $("csvCols").classList.remove("hidden"); $("csvInfo").textContent="Errore: "+err.message; }
+});
+["colT","colLat","colLon","csvFrom","csvTo"].forEach(id=>$(id).addEventListener("change",updateCsvInfo));
+function updateCsvInfo(){
+  try{ const {info}=buildCsvLap();
+    $("csvInfo").className="okbox"; $("csvInfo").innerHTML=`Giro di <b>${info.len.toFixed(1)} s</b> · G laterale max <b>${info.maxLat.toFixed(2)}</b> · frenata max <b>${info.maxBrk.toFixed(2)}</b>${info.unit>1?" · convertito da m/s²":""}. Con ${$("kgPerG").value} kg/G il picco sarà circa <b>${(info.maxLat*$("kgPerG").value*$("intensity").value/100).toFixed(1)} kg</b>.`;
+  }catch(e){ $("csvInfo").className="warnbox"; $("csvInfo").textContent=e.message; }
+}
 
 function bindRange(id,outId,fmt){ const el=$(id), o=$(outId); const f=()=>o.textContent=fmt?fmt(el.value):el.value; el.addEventListener("input",f); f(); }
-bindRange("maxKg","maxKgV"); bindRange("ramp","rampV");
+bindRange("maxKg","maxKgV"); bindRange("ramp","rampV"); bindRange("intensity","intV");
 bindRange("cL","cLv",v=>(+v).toFixed(1)); bindRange("cR","cRv",v=>(+v).toFixed(1));
 $("cL").addEventListener("input",()=>{ if($("cLink").checked){ $("cR").value=$("cL").value; $("cRv").textContent=(+$("cL").value).toFixed(1);} });
 $("cR").addEventListener("input",()=>{ if($("cLink").checked){ $("cL").value=$("cR").value; $("cLv").textContent=(+$("cR").value).toFixed(1);} });
 
-const SAVED=["maxKg","ramp","cd","kgPerG","laps"];
-SAVED.forEach(id=>{ const v=store.get("kart_"+id,null); if(v!=null){ $(id).value=v; $(id).dispatchEvent(new Event("input")); }
+["maxKg","ramp","cd","kgPerG","laps","minKg","intensity"].forEach(id=>{ const v=store.get("kart_"+id,null); if(v!=null){ $(id).value=v; $(id).dispatchEvent(new Event("input")); }
   $(id).addEventListener("change",()=>store.set("kart_"+id,$(id).value)); });
-
-const savedCustom=store.get("kartCustom",null);
-if(savedCustom){ presetSel.value="Personalizzato"; $("segText").value=savedCustom; } else { $("segText").value=PRESETS[presetSel.value]; }
+["bleLive","bleSplit","bleSwap","useBrake","invert","autoStopHidden","wakeLock"].forEach(id=>{ const v=store.get("kart_"+id,null); if(v!=null) $(id).checked=v;
+  $(id).addEventListener("change",()=>store.set("kart_"+id,$(id).checked)); });
 
 /* =========================================================
    UI BLUETOOTH
    ========================================================= */
 function onDriverChange(){
-  driver = ble.connected ? ble : sim;
+  driver=ble.connected?ble:sim;
   const p=$("connPill");
-  if(ble.connected){ p.textContent="● Bluetooth: "+(ble.device.name||"collegato"); p.className="pill ok"; }
-  else { p.textContent="● Simulatore"; p.className="pill warn"; }
+  if(ble.connected){ p.textContent="● "+(ble.device.name||"SINTESI"); p.className="pill ok"; }
+  else { p.textContent="● Simulatore"; p.className="pill warn"; $("mState").textContent="–"; }
 }
+function fillCharSelect(){ const sel=$("bleChar"); sel.innerHTML="";
+  ble.allChars.forEach((c,i)=>{ const o=document.createElement("option"); o.value=i; o.textContent=c.uuid.slice(4,8)+"  "+c.uuid; sel.appendChild(o); }); }
 if(!navigator.bluetooth){
   const w=$("bleUnsupported"); w.classList.remove("hidden");
-  w.innerHTML="Questo browser non supporta il Bluetooth web (normale su iPad e iPhone). Qui puoi usare il <b>simulatore</b>; la connessione alla macchina si prova dal tablet Lenovo con Chrome.";
-  ["bleConnect","bleSend"].forEach(id=>$(id).disabled=true);
+  w.innerHTML="Questo browser non ha il Bluetooth web. Su <b>iPad/iPhone</b> apri questa pagina con l'app gratuita <b>Bluefy</b>; su <b>Android</b> usa <b>Chrome</b>. Qui intanto funziona il simulatore.";
 }
 $("bleConnect").addEventListener("click",async()=>{
   emergencyStop();
-  try{
-    const chars=await ble.connect();
-    const sel=$("bleChar"); sel.innerHTML="";
-    chars.forEach((c,i)=>{ const o=document.createElement("option"); o.value=i; o.textContent=c.uuid.slice(4,8)+"  "+c.uuid; sel.appendChild(o); });
-  }catch(e){ log("Errore: "+e.message); }
+  try{ await ble.connect(); fillCharSelect(); }catch(e){ log("Errore: "+e.message); }
   onDriverChange();
 });
 $("bleDisconnect").addEventListener("click",()=>{ emergencyStop(); ble.disconnect(); setTimeout(onDriverChange,600); });
 $("bleSend").addEventListener("click",async()=>{
   const hex=$("bleHex").value.replace(/[^0-9a-f]/gi,"");
   if(!hex||hex.length%2){ log("HEX non valido."); return; }
-  const bytes=new Uint8Array(hex.match(/../g).map(h=>parseInt(h,16)));
-  try{ await ble.writeRaw(+$("bleChar").value,bytes); }catch(e){ log("Errore invio: "+e.message); }
+  try{ await ble.writeRaw(+$("bleChar").value,new Uint8Array(hex.match(/../g).map(h=>parseInt(h,16)))); }catch(e){ log("Errore invio: "+e.message); }
 });
-$("logCopy").addEventListener("click",async()=>{ try{ await navigator.clipboard.writeText(logLines.join("\n")); log("Registro copiato."); }catch(e){ log("Copia non riuscita: seleziona il testo a mano."); } });
+$("logCopy").addEventListener("click",async()=>{ log(await copyText(logLines.join("\n"))?"Registro copiato.":"Copia non riuscita: seleziona il testo a mano."); });
 
+setPos(POS);
 renderHistory();
-log("App pronta. Modalità simulatore attiva.");
+log("App pronta (v2). "+(navigator.bluetooth?"Bluetooth disponibile.":"Modalità simulatore."));
 </script>
 </body>
 </html>
