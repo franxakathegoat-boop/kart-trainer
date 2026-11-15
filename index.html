@@ -169,7 +169,7 @@
           <label>Fonte del giro</label>
           <div class="seg" id="srcSeg">
             <button data-src="tratti" class="on">Tratti</button>
-            <button data-src="csv">Telemetria CSV</button>
+            <button data-src="csv">Dati pista (XRK / CSV)</button>
           </div>
 
           <div data-src-panel="tratti">
@@ -187,8 +187,12 @@
           </div>
 
           <div data-src-panel="csv" class="hidden">
-            <p class="note" style="margin-top:8px">Esporta un giro dal tuo data logger (AiM Race Studio, Alfano, MyChron, RaceChrono…) in CSV, con il tempo e l'accelerazione laterale. Se c'è anche quella longitudinale, la usiamo per le frenate.</p>
-            <input type="file" id="csvFile" accept=".csv,.txt,text/csv" style="margin-top:8px">
+            <label>I miei circuiti</label>
+            <select id="trackSel"></select>
+            <label>Carica dal data logger</label>
+            <input type="file" id="csvFile">
+            <p class="note">File <b>.xrk / .xrz</b> del MyChron (AiM) oppure <b>.csv</b> esportato da qualsiasi logger. Con gli XRK l'app trova da sola il giro più veloce.</p>
+            <div id="xrkBox" class="hidden"><label>Giro</label><select id="xrkLap"></select></div>
             <div id="csvCols" class="hidden">
               <div class="row">
                 <div><label>Tempo</label><select id="colT"></select></div>
@@ -199,7 +203,11 @@
                 <div><label>Dal secondo</label><input type="number" id="csvFrom" step="0.1"></div>
                 <div><label>Al secondo</label><input type="number" id="csvTo" step="0.1"></div>
               </div>
-              <div id="csvInfo" class="okbox" style="margin-top:10px"></div>
+            </div>
+            <div id="fileInfo" class="okbox hidden" style="margin-top:10px"></div>
+            <div class="row" style="margin-top:8px">
+              <button class="ghost" id="trackSave" disabled>Salva nei miei circuiti</button>
+              <button class="ghost" id="trackDel" style="flex:0 0 auto">Elimina</button>
             </div>
           </div>
 
@@ -467,37 +475,123 @@ function parseCSV(text){
   return {headers,rows};
 }
 function guessCol(headers,re){ const i=headers.findIndex(h=>re.test(h)); return i; }
-function buildCsvLap(){
-  if(!CSV) throw new Error("Carica prima un file CSV.");
+/* ---------- giro da una serie di punti {t, lat (+ = curva a destra), brk (>=0)} ---------- */
+function smoothPts(pts,win){ // media mobile centrata (win = mezza finestra in s)
+  const out=new Array(pts.length); let i0=0,i1=0,sa=0,sb=0;
+  for(let i=0;i<pts.length;i++){
+    while(i1<pts.length && pts[i1].t-pts[i].t<=win){ sa+=pts[i1].lat; sb+=pts[i1].brk; i1++; }
+    while(pts[i].t-pts[i0].t>win){ sa-=pts[i0].lat; sb-=pts[i0].brk; i0++; }
+    const n=i1-i0; out[i]={t:pts[i].t,lat:sa/n,brk:sb/n};
+  }
+  return out;
+}
+function lapFromPts(pts){
+  const len=pts[pts.length-1].t; let k=0;
+  return { len, csv:true, at(tl){
+    if(k>=pts.length-1||tl<pts[k].t) k=0;
+    while(k<pts.length-2 && pts[k+1].t<tl) k++;
+    const a=pts[k], b=pts[k+1]||a, f=b.t>a.t?clamp((tl-a.t)/(b.t-a.t),0,1):0;
+    const lat=a.lat+(b.lat-a.lat)*f, brk=a.brk+(b.brk-a.brk)*f;
+    return {lat:clamp(lat,-4,4), lon:clamp(brk,0,3), kerb:0, label:Math.abs(lat)<0.4?"dritto":(lat>0?"dx":"sx")};
+  }};
+}
+function ptsStats(pts){ return { len:pts[pts.length-1].t, maxLat:Math.max(...pts.map(p=>Math.abs(p.lat))), maxBrk:Math.max(...pts.map(p=>p.brk)) }; }
+
+function csvPts(){
+  if(!CSV) throw new Error("Carica prima un file.");
   const it=+$("colT").value, il=+$("colLat").value, io=+$("colLon").value;
   let pts=CSV.rows.map(r=>({t:r[it],lat:r[il],lon:io>=0?r[io]:0})).filter(p=>!isNaN(p.t)&&!isNaN(p.lat));
   if(pts.length<10) throw new Error("Troppi pochi dati validi.");
-  // tempo in ms?
   const dt=(pts[pts.length-1].t-pts[0].t)/(pts.length-1);
-  if(dt>5) pts.forEach(p=>p.t/=1000);
+  if(dt>5) pts.forEach(p=>p.t/=1000);           // tempo in ms
   const t0=pts[0].t; pts.forEach(p=>p.t-=t0);
   const from=parseFloat($("csvFrom").value), to=parseFloat($("csvTo").value);
   if(!isNaN(from)&&!isNaN(to)&&to>from) pts=pts.filter(p=>p.t>=from&&p.t<=to).map(p=>({...p,t:p.t-from}));
-  // unità: m/s² -> G
-  const maxAbs=Math.max(...pts.map(p=>Math.abs(p.lat)));
-  const unit = maxAbs>6 ? 9.81 : 1;
+  const unit=Math.max(...pts.map(p=>Math.abs(p.lat)))>6?9.81:1;   // m/s² -> G
   pts.forEach(p=>{ p.lat/=unit; p.lon=(isNaN(p.lon)?0:p.lon)/unit; });
-  // media mobile 0.3 s
-  const win=0.15, sm=pts.map((p,i)=>{ let a=0,b=0,n=0; for(let j=i;j>=0&&pts[i].t-pts[j].t<=win;j--){a+=pts[j].lat;b+=pts[j].lon;n++;} for(let j=i+1;j<pts.length&&pts[j].t-pts[i].t<=win;j++){a+=pts[j].lat;b+=pts[j].lon;n++;} return {t:p.t,lat:a/n,lon:b/n}; });
-  const len=sm[sm.length-1].t;
-  // nei logger la frenata è spesso negativa: la rendiamo positiva
-  const brakeSign = Math.abs(Math.min(...sm.map(p=>p.lon))) > Math.max(...sm.map(p=>p.lon)) ? -1 : 1;
-  let k=0;
-  const lap={ len, csv:true, at(tl){
-    if(tl<sm[k].t) k=0;
-    while(k<sm.length-2 && sm[k+1].t<tl) k++;
-    const a=sm[k], b=sm[k+1], f=b.t>a.t?clamp((tl-a.t)/(b.t-a.t),0,1):0;
-    const lat=a.lat+(b.lat-a.lat)*f, lon=(a.lon+(b.lon-a.lon)*f)*brakeSign;
-    return {lat:clamp(lat,-4,4), lon:clamp(Math.max(0,lon),0,3), kerb:0, label: Math.abs(lat)<0.4?"dritto":(lat>0?"dx":"sx")};
-  }};
-  const maxLat=Math.max(...sm.map(p=>Math.abs(p.lat))), maxBrk=Math.max(...sm.map(p=>Math.max(0,p.lon*brakeSign)));
-  return {lap, info:{len,maxLat,maxBrk,unit,n:sm.length}};
+  // la frenata nei logger è di solito negativa: la rendiamo positiva
+  const sign=Math.abs(Math.min(...pts.map(p=>p.lon)))>Math.max(...pts.map(p=>p.lon))?-1:1;
+  return smoothPts(pts.map(p=>({t:p.t,lat:p.lat,brk:Math.max(0,p.lon*sign)})),0.15);
 }
+
+/* ---------- lettore XRK/XRZ (AiM) ----------
+   Il file è una sequenza di messaggi. Ci servono solo i messaggi "<h…>" con token
+   GPS/GPS1 (record da 56 byte: tempo, posizione e velocità ECEF in cm e cm/s),
+   LAP (tempi sul giro) e TRK (nome pista). Ogni messaggio ha checksum: così lo
+   riconosciamo con sicurezza anche senza decodificare tutto il resto del file. */
+async function readXrk(buf){
+  let u8=new Uint8Array(buf);
+  if(u8[0]===0x78&&(u8[1]===0x01||u8[1]===0x9c||u8[1]===0xda)){   // XRZ = XRK compresso zlib
+    if(!("DecompressionStream" in window)) throw new Error("Questo browser non sa aprire gli .xrz: usa il file .xrk.");
+    const ds=new DecompressionStream("deflate"), w=ds.writable.getWriter(); w.write(u8).catch(()=>{}); w.close().catch(()=>{});
+    const chunks=[]; const r=ds.readable.getReader();
+    try{ for(;;){ const {done,value}=await r.read(); if(done) break; chunks.push(value); } }catch(e){ /* file troncato: usiamo quello che c'è */ }
+    const n=chunks.reduce((a,c)=>a+c.length,0); u8=new Uint8Array(n); let o=0; chunks.forEach(c=>{u8.set(c,o);o+=c.length;});
+  }
+  const dv=new DataView(u8.buffer,u8.byteOffset,u8.byteLength), n=u8.length;
+  const tokStr=v=>{ let s=""; while(v){ s+=String.fromCharCode(v&255); v>>>=8; } return s.replace(/[\s\0]+$/,""); };
+  const gpsParts=[], lapMsgs=[]; let venue="", date="";
+  let pos=0;
+  while(pos+20<n){
+    pos=u8.indexOf(0x3c,pos); if(pos<0||pos+20>=n) break;
+    if(u8[pos+1]===0x68&&u8[pos+11]===0x3e){
+      const tok=dv.getUint32(pos+2,true), hlen=dv.getInt32(pos+6,true), f=pos+12+hlen;
+      if(hlen>=0&&f+8<=n&&u8[f]===0x3c&&u8[f+7]===0x3e&&dv.getUint32(f+1,true)===tok){
+        let sum=0; for(let i=pos+12;i<f;i++) sum+=u8[i];
+        if((sum&0xffff)===dv.getUint16(f+5,true)){
+          const name=tokStr(tok), body=u8.subarray(pos+12,f);
+          if(name==="GPS"||name==="GPS1") gpsParts.push(body);
+          else if(name==="LAP") lapMsgs.push(body);
+          else if(name==="TRK") venue=new TextDecoder().decode(body.subarray(0,Math.max(0,body.indexOf(0)))).trim();
+          else if(name==="TMD") date=new TextDecoder().decode(body.subarray(0,Math.max(0,body.indexOf(0)))).trim();
+          pos=f+8; continue;
+        }
+      }
+    }
+    pos++;
+  }
+  const total=gpsParts.reduce((a,p)=>a+p.length,0), nrec=Math.floor(total/56);
+  if(nrec<50) throw new Error("Nel file non ci sono dati GPS.");
+  const g=new Uint8Array(total); { let o=0; gpsParts.forEach(p=>{g.set(p,o);o+=p.length;}); }
+  const gd=new DataView(g.buffer);
+  const tc=new Float64Array(nrec), vE=new Float64Array(nrec), vN=new Float64Array(nrec);
+  for(let i=0;i<nrec;i++){
+    const o=i*56; tc[i]=gd.getInt32(o,true);
+    const X=gd.getInt32(o+16,true)/100, Y=gd.getInt32(o+20,true)/100, Z=gd.getInt32(o+24,true)/100;
+    const VX=gd.getInt32(o+32,true)/100, VY=gd.getInt32(o+36,true)/100, VZ=gd.getInt32(o+40,true)/100;
+    const lon=Math.atan2(Y,X), lat=Math.atan2(Z,Math.hypot(X,Y)*(1-0.00669438));
+    vE[i]=-Math.sin(lon)*VX+Math.cos(lon)*VY;
+    vN[i]=-Math.sin(lat)*Math.cos(lon)*VX-Math.sin(lat)*Math.sin(lon)*VY+Math.cos(lat)*VZ;
+  }
+  // velocità lisciata (5 campioni) -> accelerazione -> G laterale e longitudinale
+  const sm=(a,w)=>{ const o=new Float64Array(a.length), h=w>>1; for(let i=0;i<a.length;i++){ let s=0,c=0; for(let j=Math.max(0,i-h);j<=Math.min(a.length-1,i+h);j++){s+=a[j];c++;} o[i]=s/c; } return o; };
+  const sE=sm(vE,5), sN=sm(vN,5), latG=new Float64Array(nrec), inlG=new Float64Array(nrec);
+  for(let i=0;i<nrec;i++){
+    const a=Math.max(0,i-1), b=Math.min(nrec-1,i+1), dt=(tc[b]-tc[a])/1000||0.04;
+    const aE=(sE[b]-sE[a])/dt, aN=(sN[b]-sN[a])/dt, sp=Math.hypot(vE[i],vN[i]);
+    if(sp<2){ latG[i]=0; inlG[i]=0; continue; }
+    latG[i]=-(vE[i]*aN-vN[i]*aE)/sp/9.81;   // + = curva a destra
+    inlG[i]=(vE[i]*aE+vN[i]*aN)/sp/9.81;    // + = accelerazione, - = frenata
+  }
+  const latS=sm(latG,7), inlS=sm(inlG,7);
+  // giri dai messaggi LAP (segmento 0)
+  const laps=[]; const seen=new Set();
+  lapMsgs.forEach(m=>{ if(m.length<20) return; const d=new DataView(m.buffer,m.byteOffset,m.length);
+    const seg=m[1], num=d.getUint16(2,true), dur=d.getUint32(4,true), end=m.length>=32?d.getUint32(28,true):d.getUint32(16,true);
+    if(seg!==0||seen.has(num)) return; seen.add(num); laps.push({num,dur,end,start:end-dur}); });
+  laps.sort((a,b)=>a.num-b.num);
+  const first=laps[0]?laps[0].num:0;
+  laps.forEach(l=>{ l.num-=first; l.out = l.start<=tc[0]+500; });
+  const fulls=laps.filter(l=>!l.out);
+  const med=fulls.length?fulls.map(l=>l.dur).sort((a,b)=>a-b)[Math.floor(fulls.length/2)]:0;
+  fulls.forEach(l=>{ l.partial = l.dur<0.7*med; });
+  const valid=fulls.filter(l=>!l.partial);
+  const best=valid.length?valid.reduce((a,b)=>b.dur<a.dur?b:a):null;
+  return { venue, date, laps, best, nrec,
+    lapPts(l){ const pts=[]; for(let i=0;i<nrec;i++){ if(tc[i]>=l.start&&tc[i]<=l.end) pts.push({t:(tc[i]-l.start)/1000,lat:latS[i],brk:Math.max(0,-inlS[i])}); } return pts; },
+    allPts(){ const pts=[]; for(let i=0;i<nrec;i++) pts.push({t:(tc[i]-tc[0])/1000,lat:latS[i],brk:Math.max(0,-inlS[i])}); return pts; } };
+}
+const fmtLap=ms=>{ const s=ms/1000, m=Math.floor(s/60); return (m?m+":":"")+(m?(s-m*60).toFixed(3).padStart(6,"0"):s.toFixed(3)); };
 
 /* =========================================================
    DA G A KG SULLE DUE COLONNE
@@ -729,11 +823,11 @@ let SRC="tratti";
 $("goCircuit").addEventListener("click",()=>{
   try{
     let lap, segs=null;
-    if(SRC==="csv"){ lap=buildCsvLap().lap; }
+    if(SRC==="csv"){ if(!CUR) throw new Error("Scegli un circuito salvato o carica un file."); lap=lapFromPts(CUR.pts); }
     else { segs=parseSegments($("segText").value); lap=lapFromSegments(segs); }
     const prog=makeCircuit(lap,Math.max(1,+$("laps").value|0));
     buildSegBar(lap); $("segWrap").classList.remove("hidden");
-    start("Circuito: "+(SRC==="csv"?"telemetria":$("preset").value),prog);
+    start("Circuito: "+(SRC==="csv"?CUR.name:$("preset").value),prog);
   }catch(e){ $("stateTxt").textContent="errore: "+e.message; }
 });
 $("goConst").addEventListener("click",()=>{ $("segWrap").classList.add("hidden"); start("Forza costante",makeConstant()); });
@@ -965,24 +1059,68 @@ $("segText").addEventListener("input",()=>{ presetSel.value="Personalizzato"; st
 const savedCustom=store.get("kartCustom",null);
 if(savedCustom){ presetSel.value="Personalizzato"; $("segText").value=savedCustom; } else $("segText").value=PRESETS[presetSel.value];
 
-// CSV
+// FILE: XRK / CSV + circuiti salvati
+let CUR=null, XRK=null;
+function setCur(name,pts,extra){
+  if(!pts||pts.length<20) throw new Error("Giro troppo corto o senza dati.");
+  CUR={name,pts}; const st=ptsStats(pts);
+  $("fileInfo").className="okbox"; $("fileInfo").classList.remove("hidden");
+  $("fileInfo").innerHTML=`${extra?extra+"<br>":""}Giro di <b>${st.len.toFixed(1)} s</b> · G laterale max <b>${st.maxLat.toFixed(2)}</b> · frenata max <b>${st.maxBrk.toFixed(2)}</b>. Con ${$("kgPerG").value} kg/G il picco sarà circa <b>${(st.maxLat*$("kgPerG").value*$("intensity").value/100).toFixed(1)} kg</b>.`;
+  $("trackSave").disabled=false;
+}
+function fileError(msg){ CUR=null; $("fileInfo").className="warnbox"; $("fileInfo").classList.remove("hidden"); $("fileInfo").textContent=msg; $("trackSave").disabled=true; }
 $("csvFile").addEventListener("change",async e=>{
   const f=e.target.files[0]; if(!f) return;
+  $("xrkBox").classList.add("hidden"); $("csvCols").classList.add("hidden"); $("trackSel").value="";
+  $("fileInfo").className="okbox"; $("fileInfo").classList.remove("hidden"); $("fileInfo").textContent="Lettura del file…";
   try{
-    CSV=parseCSV(await f.text());
-    const opts=CSV.headers.map((h,i)=>`<option value="${i}">${h||("colonna "+(i+1))}</option>`).join("");
-    $("colT").innerHTML=opts; $("colLat").innerHTML=opts; $("colLon").innerHTML=`<option value="-1">(nessuna)</option>`+opts;
-    const gT=guessCol(CSV.headers,/^(time|tempo|t|seconds|sec|timestamp)\b|time/i), gL=guessCol(CSV.headers,/lat/i), gO=guessCol(CSV.headers,/lon|inline|long/i);
-    $("colT").value=gT>=0?gT:0; $("colLat").value=gL>=0?gL:1; $("colLon").value=gO>=0?gO:-1;
-    $("csvCols").classList.remove("hidden"); updateCsvInfo();
-  }catch(err){ $("csvCols").classList.remove("hidden"); $("csvInfo").textContent="Errore: "+err.message; }
+    const buf=await f.arrayBuffer(), head=new Uint8Array(buf.slice(0,4));
+    const isXrk=/\.xr[kz]$/i.test(f.name)||(head[0]===0x3c&&head[1]===0x68)||(head[0]===0x78&&[1,0x9c,0xda].includes(head[1]));
+    if(isXrk){
+      XRK=await readXrk(buf);
+      const sel=$("xrkLap");
+      if(XRK.laps.length){
+        sel.innerHTML=XRK.laps.map((l,i)=>`<option value="${i}">Giro ${l.num} · ${fmtLap(l.dur)}${l.out?" (uscita box)":l.partial?" (parziale)":""}${XRK.best===l?" ★ più veloce":""}</option>`).join("");
+        sel.value=String(XRK.laps.indexOf(XRK.best||XRK.laps[XRK.laps.length-1]));
+      } else sel.innerHTML=`<option value="all">Sessione intera (nessun giro registrato)</option>`;
+      $("xrkBox").classList.remove("hidden"); pickXrkLap();
+    } else {
+      CSV=parseCSV(new TextDecoder().decode(buf));
+      const opts=CSV.headers.map((h,i)=>`<option value="${i}">${h||("colonna "+(i+1))}</option>`).join("");
+      $("colT").innerHTML=opts; $("colLat").innerHTML=opts; $("colLon").innerHTML=`<option value="-1">(nessuna)</option>`+opts;
+      const gT=guessCol(CSV.headers,/time|tempo|^t$|sec/i), gL=guessCol(CSV.headers,/lat/i), gO=guessCol(CSV.headers,/lon|inline|long/i);
+      $("colT").value=gT>=0?gT:0; $("colLat").value=gL>=0?gL:1; $("colLon").value=gO>=0?gO:-1;
+      $("csvCols").classList.remove("hidden"); updateCsv();
+    }
+  }catch(err){ fileError("Non riesco a leggere il file: "+err.message); }
 });
-["colT","colLat","colLon","csvFrom","csvTo"].forEach(id=>$(id).addEventListener("change",updateCsvInfo));
-function updateCsvInfo(){
-  try{ const {info}=buildCsvLap();
-    $("csvInfo").className="okbox"; $("csvInfo").innerHTML=`Giro di <b>${info.len.toFixed(1)} s</b> · G laterale max <b>${info.maxLat.toFixed(2)}</b> · frenata max <b>${info.maxBrk.toFixed(2)}</b>${info.unit>1?" · convertito da m/s²":""}. Con ${$("kgPerG").value} kg/G il picco sarà circa <b>${(info.maxLat*$("kgPerG").value*$("intensity").value/100).toFixed(1)} kg</b>.`;
-  }catch(e){ $("csvInfo").className="warnbox"; $("csvInfo").textContent=e.message; }
+function pickXrkLap(){
+  try{ const v=$("xrkLap").value;
+    if(v==="all") setCur((XRK.venue||"Sessione")+" (sessione)",XRK.allPts(),`<b>${XRK.venue||"Pista"}</b> ${XRK.date}`);
+    else { const l=XRK.laps[+v];
+      setCur(`${XRK.venue||"Pista"} ${fmtLap(l.dur)}`,XRK.lapPts(l),`<b>${XRK.venue||"Pista"}</b> ${XRK.date} · giro ${l.num} in <b>${fmtLap(l.dur)}</b>${XRK.best===l?" ★":""}`); }
+  }catch(e){ fileError(e.message); }
 }
+$("xrkLap").addEventListener("change",pickXrkLap);
+["colT","colLat","colLon","csvFrom","csvTo"].forEach(id=>$(id).addEventListener("change",updateCsv));
+function updateCsv(){ try{ setCur("CSV "+new Date().toLocaleDateString("it-IT"),csvPts()); }catch(e){ fileError(e.message); } }
+
+// circuiti salvati (10 punti al secondo)
+function renderTracks(){ const t=store.get("kartTracks",[]);
+  $("trackSel").innerHTML=`<option value="">${t.length?"— scegli —":"— nessuno salvato —"}</option>`+t.map((x,i)=>`<option value="${i}">${x.name}</option>`).join(""); }
+$("trackSave").addEventListener("click",()=>{
+  if(!CUR) return; const t=store.get("kartTracks",[]); const pts=[]; let next=0;
+  CUR.pts.forEach(p=>{ if(p.t>=next){ pts.push([+p.t.toFixed(2),+p.lat.toFixed(3),+p.brk.toFixed(3)]); next=p.t+0.1; } });
+  t.unshift({name:CUR.name,pts}); store.set("kartTracks",t.slice(0,30)); renderTracks(); $("trackSel").value="0";
+  $("trackSave").disabled=true; $("trackSave").textContent="Salvato ✔"; setTimeout(()=>$("trackSave").textContent="Salva nei miei circuiti",2000);
+});
+$("trackSel").addEventListener("change",()=>{ const v=$("trackSel").value; if(v==="") return;
+  const x=store.get("kartTracks",[])[+v]; if(!x) return;
+  try{ setCur(x.name,x.pts.map(a=>({t:a[0],lat:a[1],brk:a[2]})),`<b>${x.name}</b> (salvato)`); $("trackSave").disabled=true; }catch(e){ fileError(e.message); } });
+$("trackDel").addEventListener("click",()=>{ const v=$("trackSel").value; if(v==="") return;
+  const t=store.get("kartTracks",[]); t.splice(+v,1); store.set("kartTracks",t); renderTracks(); CUR=null; $("fileInfo").classList.add("hidden"); });
+renderTracks();
+{ const t=store.get("kartTracks",[]); if(t.length){ $("trackSel").value="0"; $("trackSel").dispatchEvent(new Event("change")); } }
 
 function bindRange(id,outId,fmt){ const el=$(id), o=$(outId); const f=()=>o.textContent=fmt?fmt(el.value):el.value; el.addEventListener("input",f); f(); }
 bindRange("maxKg","maxKgV"); bindRange("ramp","rampV"); bindRange("intensity","intV");
