@@ -106,7 +106,7 @@
 <div class="wrap">
 
   <header>
-    <h1>Kart Neck Trainer<small>Sintesi by Akuis · v2.2</small></h1>
+    <h1>Kart Neck Trainer<small>Sintesi by Akuis · v2.3</small></h1>
     <span id="connPill" class="pill warn">● Simulatore</span>
     <button class="stop" id="btnStop">STOP</button>
   </header>
@@ -642,7 +642,8 @@ class SimDriver {
    ========================================================= */
 const NUS="6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 const U16=h=>`0000${h}-0000-1000-8000-00805f9b34fb`;
-const CH={ init:U16("0007"), cfg:U16("ff03"), run:U16("ff07"), status:U16("ff0c"), tele:U16("ff0d"), resp:U16("0002") };
+const CH={ init:U16("0007"), cfg:U16("ff03"), run:U16("ff07"), status:U16("ff0c"), tele:U16("ff0d"), resp:U16("0002"),
+  n9:U16("0009"), fa:U16("ff0a"), fb:U16("ff0b"), f01:U16("ff01"), f09:U16("ff09"), cmd:U16("0003"), wdone:U16("0008") };
 const CFG_TEMPLATE="00000000881300008813000000000000000000000000000000000000010000000000000000000000000000008813000000000000000000000000000000000000000000000000000000000000881300000000000000000000000000000000000000000000000000000000000000000000a861000000000000000000000000000000000000000000000000000000000000000000000100000002000000030000000400000000000000";
 const LICENSE_MAX_KG=50;
 
@@ -673,11 +674,26 @@ class BleDriver {
     if(!this.c.cfg||!this.c.run) throw new Error("mancano i canali dei comandi (FF03/FF07): manda a Claude lo screenshot del registro");
     const sub=async(k,fn)=>{ if(!this.c[k]) return; try{ this.c[k].addEventListener("characteristicvaluechanged",e=>fn(e.target.value)); await this.c[k].startNotifications(); log("✔ notifiche "+k); }catch(e){ log("✖ notifiche "+k+": "+e.message); } };
     this.teleN=0;
-    await sub("tele",dv=>{ this.teleN++; if(this.teleN===1||this.teleN%60===0) log(`◀ telemetria #${this.teleN} (${dv.byteLength} byte): ${dv.byteLength>=16?(dv.getInt32(8,true)+" / "+dv.getInt32(12,true)+" g"):"?"}`); if(dv.byteLength>=16){ const a=dv.getInt32(8,true)/1000, b=dv.getInt32(12,true)/1000; if(this.opt("swap")){this.meas.L=b;this.meas.R=a;} else {this.meas.L=a;this.meas.R=b;} } });
-    await sub("status",dv=>this.onStatus(new TextDecoder().decode(dv)));
-    await sub("resp",dv=>log("◀ "+new TextDecoder().decode(dv)));
-    if(this.c.init) await this.write("init",new TextEncoder().encode('{"cmd":0,"comVersion":3,"outputPeriod":80}'),"avvio comunicazione");
-    else log("ℹ canale di avvio 0007 non trovato: continuo senza");
+    const td=new TextDecoder(), te=new TextEncoder();
+    const onTele=dv=>{ this.teleN++; if(this.teleN===1||this.teleN%60===0) log(`◀ telemetria #${this.teleN} (${dv.byteLength} byte): ${dv.byteLength>=16?(dv.getInt32(8,true)+" / "+dv.getInt32(12,true)+" g"):"?"}`);
+      if(dv.byteLength>=16){ const a=dv.getInt32(8,true)/1000, b=dv.getInt32(12,true)/1000; if(this.opt("swap")){this.meas.L=b;this.meas.R=a;} else {this.meas.L=a;this.meas.R=b;} } };
+    // stessa sequenza dell'app Sintesi (registro Bluetooth del 14/11): iscrizioni, avvio, letture, richieste 0003
+    const handlers={ resp:dv=>log("◀ "+td.decode(dv).slice(0,160)), n9:()=>{}, fb:()=>{}, status:dv=>this.onStatus(td.decode(dv)), tele:onTele, fa:()=>{}, cfg:()=>{} };
+    for(const k of ["resp","n9","fb","status","tele","fa","cfg"]){
+      if(!this.c[k]) continue;
+      try{ this.c[k].addEventListener("characteristicvaluechanged",e=>handlers[k](e.target.value)); await this.c[k].startNotifications(); }
+      catch(e){ log("✖ notifiche "+k+": "+e.message); }
+    }
+    log("✔ notifiche attivate");
+    if(this.c.init) await this.write("init",te.encode('{"cmd":0,"comVersion":3,"outputPeriod":80}'),"avvio comunicazione");
+    const rd=async k=>{ if(!this.c[k]) return null; try{ return await this.c[k].readValue(); }catch(e){ log("✖ lettura "+k+": "+e.message); return null; } };
+    const st=await rd("status"); if(st) this.onStatus(td.decode(st));
+    await rd("fb"); await rd("f01"); await rd("status"); await rd("cfg"); await rd("f09");
+    if(this.c.cmd){
+      await this.write("cmd",te.encode('{"addr":1069,"cmd":0,"id":255,"msg_id":1,"num":3}'));
+      await this.write("cmd",te.encode('{"addr":1069,"cmd":0,"id":1,"msg_id":2,"num":3}'));
+    }
+    await rd("fb");
     log("✔ Collegato e pronto.");
     return this.allChars;
   }
@@ -707,6 +723,8 @@ class BleDriver {
     this.enqueue("carico",()=>this.write("cfg",b,`carico ${txt}${why?" ("+why+")":""}`));
   }
   begin(L,R){ if(!this.connected) return; this.lastSent=null; this.sendCfg(L,R,"iniziale");
+    if(this.c.wdone) this.enqueue("prep",()=>this.write("wdone",new TextEncoder().encode('{"workoutDoneAdditionalValues":{"user_id":341,"exercise_series_counter":1,"workout_cycle_counter":1}}')));
+    this.enqueue("carico",()=>this.write("cfg",this.buildCfg(L,R).b));
     this.enqueue("avvio",()=>this.write("run",new Uint8Array([3,0,0,0]),"AVVIA")); this.active=true; }
   setForce(L,R){ this.cmd.L=L; this.cmd.R=R;
     if(!this.active||!this.opt("live")) return;
@@ -1174,7 +1192,7 @@ $("logCopy").addEventListener("click",async()=>{ log(await copyText(logLines.joi
 
 setPos(POS);
 renderHistory();
-log("App pronta (v2.2). "+(navigator.bluetooth?"Bluetooth disponibile.":"Modalità simulatore."));
+log("App pronta (v2.3). "+(navigator.bluetooth?"Bluetooth disponibile.":"Modalità simulatore."));
 </script>
 </body>
 </html>
