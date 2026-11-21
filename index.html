@@ -106,7 +106,7 @@
 <div class="wrap">
 
   <header>
-    <h1>Kart Neck Trainer<small>Sintesi by Akuis · v2.1</small></h1>
+    <h1>Kart Neck Trainer<small>Sintesi by Akuis · v2.2</small></h1>
     <span id="connPill" class="pill warn">● Simulatore</span>
     <button class="stop" id="btnStop">STOP</button>
   </header>
@@ -671,8 +671,9 @@ class BleDriver {
       if(!this.c[k]) log("⚠ manca "+k+" ("+u+")");
     }
     if(!this.c.cfg||!this.c.run) throw new Error("mancano i canali dei comandi (FF03/FF07): manda a Claude lo screenshot del registro");
-    const sub=async(k,fn)=>{ if(!this.c[k]) return; await this.c[k].startNotifications(); this.c[k].addEventListener("characteristicvaluechanged",e=>fn(e.target.value)); };
-    await sub("tele",dv=>{ if(dv.byteLength>=16){ const a=dv.getInt32(8,true)/1000, b=dv.getInt32(12,true)/1000; if(this.opt("swap")){this.meas.L=b;this.meas.R=a;} else {this.meas.L=a;this.meas.R=b;} } });
+    const sub=async(k,fn)=>{ if(!this.c[k]) return; try{ this.c[k].addEventListener("characteristicvaluechanged",e=>fn(e.target.value)); await this.c[k].startNotifications(); log("✔ notifiche "+k); }catch(e){ log("✖ notifiche "+k+": "+e.message); } };
+    this.teleN=0;
+    await sub("tele",dv=>{ this.teleN++; if(this.teleN===1||this.teleN%60===0) log(`◀ telemetria #${this.teleN} (${dv.byteLength} byte): ${dv.byteLength>=16?(dv.getInt32(8,true)+" / "+dv.getInt32(12,true)+" g"):"?"}`); if(dv.byteLength>=16){ const a=dv.getInt32(8,true)/1000, b=dv.getInt32(12,true)/1000; if(this.opt("swap")){this.meas.L=b;this.meas.R=a;} else {this.meas.L=a;this.meas.R=b;} } });
     await sub("status",dv=>this.onStatus(new TextDecoder().decode(dv)));
     await sub("resp",dv=>log("◀ "+new TextDecoder().decode(dv)));
     if(this.c.init) await this.write("init",new TextEncoder().encode('{"cmd":0,"comVersion":3,"outputPeriod":80}'),"avvio comunicazione");
@@ -681,6 +682,7 @@ class BleDriver {
     return this.allChars;
   }
   onStatus(txt){
+    log("◀ stato: "+txt.slice(0,160));
     try{ const j=JSON.parse(txt); this.seq=j.OUT_APP_SEQ;
       $("mState").textContent=j.OUT_APP_SEQ===4?"in corso":j.OUT_APP_SEQ===3?"ferma":String(j.OUT_APP_SEQ);
       $("mAlarm").textContent=j.OUT_APP_ALARM?("⚠ "+j.OUT_APP_ALARM):"nessuno";
@@ -1172,7 +1174,7 @@ $("logCopy").addEventListener("click",async()=>{ log(await copyText(logLines.joi
 
 setPos(POS);
 renderHistory();
-log("App pronta (v2). "+(navigator.bluetooth?"Bluetooth disponibile.":"Modalità simulatore."));
+log("App pronta (v2.2). "+(navigator.bluetooth?"Bluetooth disponibile.":"Modalità simulatore."));
 </script>
 </body>
 </html>
