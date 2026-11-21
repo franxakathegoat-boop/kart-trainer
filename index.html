@@ -106,7 +106,7 @@
 <div class="wrap">
 
   <header>
-    <h1>Kart Neck Trainer<small>Sintesi by Akuis · v2</small></h1>
+    <h1>Kart Neck Trainer<small>Sintesi by Akuis · v2.1</small></h1>
     <span id="connPill" class="pill warn">● Simulatore</span>
     <button class="stop" id="btnStop">STOP</button>
   </header>
@@ -662,12 +662,21 @@ class BleDriver {
     const server=await this.device.gatt.connect();
     const svc=await server.getPrimaryService(NUS);
     this.allChars=await svc.getCharacteristics();
-    for(const [k,u] of Object.entries(CH)){ this.c[k]=this.allChars.find(x=>x.uuid===u); if(!this.c[k]) log("⚠ manca "+k); }
+    // alcuni browser (es. Bluefy su iPhone) scrivono gli UUID in modo diverso: maiuscole o forma corta
+    const norm=u=>{ u=String(u).toLowerCase().replace(/^0x/,""); if(/^[0-9a-f]{4}$/.test(u)) u="0000"+u; if(/^[0-9a-f]{8}$/.test(u)) u=u+"-0000-1000-8000-00805f9b34fb"; return u; };
+    log("Caratteristiche trovate: "+this.allChars.map(x=>String(x.uuid)).join(", "));
+    for(const [k,u] of Object.entries(CH)){
+      this.c[k]=this.allChars.find(x=>norm(x.uuid)===u);
+      if(!this.c[k]){ try{ this.c[k]=await svc.getCharacteristic(u); }catch(e){} }
+      if(!this.c[k]) log("⚠ manca "+k+" ("+u+")");
+    }
+    if(!this.c.cfg||!this.c.run) throw new Error("mancano i canali dei comandi (FF03/FF07): manda a Claude lo screenshot del registro");
     const sub=async(k,fn)=>{ if(!this.c[k]) return; await this.c[k].startNotifications(); this.c[k].addEventListener("characteristicvaluechanged",e=>fn(e.target.value)); };
     await sub("tele",dv=>{ if(dv.byteLength>=16){ const a=dv.getInt32(8,true)/1000, b=dv.getInt32(12,true)/1000; if(this.opt("swap")){this.meas.L=b;this.meas.R=a;} else {this.meas.L=a;this.meas.R=b;} } });
     await sub("status",dv=>this.onStatus(new TextDecoder().decode(dv)));
     await sub("resp",dv=>log("◀ "+new TextDecoder().decode(dv)));
-    await this.write("init",new TextEncoder().encode('{"cmd":0,"comVersion":3,"outputPeriod":80}'),"avvio comunicazione");
+    if(this.c.init) await this.write("init",new TextEncoder().encode('{"cmd":0,"comVersion":3,"outputPeriod":80}'),"avvio comunicazione");
+    else log("ℹ canale di avvio 0007 non trovato: continuo senza");
     log("✔ Collegato e pronto.");
     return this.allChars;
   }
